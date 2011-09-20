@@ -16,8 +16,8 @@ public class TFRanking
 {
 	public static void main(String[] args) 
 	{
-		String input = "abandonados abandonar";
-		//String input = "arjun abandonados";
+		//String input = "abandonados abandonar";
+		String input = "aboard";
 		try
 		{
 			IndexReader reader = IndexReader.open("result3index");
@@ -46,7 +46,6 @@ public class TFRanking
 			}
 			similarity = normalizeSimilarity(similarity, reader);
 			sortedResult(similarity, reader);
-			System.out.println("done");
 		}
 		catch(Exception ex)
 		{
@@ -61,12 +60,15 @@ public class TFRanking
 			ArrayList myArrayList=new ArrayList(similarity.entrySet());
 			Collections.sort(myArrayList, new MyComparator());
 			Iterator itr=myArrayList.iterator();
+			int count = 0;
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Float> e = (Map.Entry<Integer, Float>)itr.next();
-				
-				System.out.println(e.getKey() + " " + e.getValue());
+				count++;
+				System.out.println(count + ". " + reader.document(e.getKey()).get("url"));
+				//System.out.println(e.getKey() + " " + e.getValue());
 			}
+			System.out.println(count + " " + "documents found");
 		}
 		catch(Exception ex)
 		{

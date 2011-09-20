@@ -4,15 +4,20 @@ import com.lucene.document.Field;
 import com.lucene.index.*;
 
 import java.io.ObjectInputStream.GetField;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 public class TFRanking 
 {
 	public static void main(String[] args) 
 	{
 		String input = "abandonados abandonar";
-		//String input = "arjun";
+		//String input = "arjun abandonados";
 		try
 		{
 			IndexReader reader = IndexReader.open("result3index");
@@ -39,12 +44,52 @@ public class TFRanking
 					}
 				}
 			}
+			similarity = normalizeSimilarity(similarity, reader);
+			sortedResult(similarity, reader);
 			System.out.println("done");
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
+	}
+	
+	private static void sortedResult(Hashtable<Integer, Float> similarity, IndexReader reader)
+	{
+		try
+		{
+			ArrayList myArrayList=new ArrayList(similarity.entrySet());
+			Collections.sort(myArrayList, new MyComparator());
+			Iterator itr=myArrayList.iterator();
+			while(itr.hasNext())
+			{
+				Map.Entry<Integer, Float> e = (Map.Entry<Integer, Float>)itr.next();
+				
+				System.out.println(e.getKey() + " " + e.getValue());
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private static Hashtable<Integer, Float> normalizeSimilarity(Hashtable<Integer, Float> similarity, IndexReader reader)
+	{
+		try
+		{
+			Enumeration<Integer> similarityList = similarity.keys();
+			while(similarityList.hasMoreElements())
+			{
+				Integer documentID = similarityList.nextElement();
+				similarity.put(documentID, similarity.get(documentID) / reader.norms("contents")[documentID]);
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return similarity;
 	}
 	
 	private static Hashtable<String, Integer> getTokenizedQuery(String input)
@@ -71,4 +116,27 @@ public class TFRanking
 		}
 		return tokenizedQuery;
 	}
+}
+
+class MyComparator implements Comparator
+{
+	public int compare(Object obj1, Object obj2)
+	{
+		int result=0;
+		Map.Entry e1 = (Map.Entry)obj1 ;
+		Map.Entry e2 = (Map.Entry)obj2 ;
+		Float value1 = (Float)e1.getValue();
+		Float value2 = (Float)e2.getValue();
+		if(value1.compareTo(value2) == 0)
+		{
+			Integer word1=(Integer)e1.getKey();
+			Integer word2=(Integer)e2.getKey();
+			result = word1.compareTo(word2);
+		} 
+		else
+		{
+			result = value2.compareTo(value1);
+		}
+		return result;
+	 }
 }

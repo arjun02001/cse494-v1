@@ -4,6 +4,7 @@ import com.lucene.document.Field;
 import com.lucene.index.*;
 
 import java.io.ObjectInputStream.GetField;
+import java.util.Enumeration;
 import java.util.Hashtable;
 
 public class TFRanking 
@@ -11,19 +12,34 @@ public class TFRanking
 	public static void main(String[] args) 
 	{
 		String input = "abandonados abandonar";
+		//String input = "arjun";
 		try
 		{
 			IndexReader reader = IndexReader.open("result3index");
 			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
+			Hashtable<Integer, Float> similarity = new Hashtable<Integer, Float>();
 			
-			
-			System.out.println("");
-			/*TermDocs termDocs = reader.termDocs(new Term("contents", query));
-			while(termDocs.next())
+			Enumeration<String> queryKeywords = tokenizedQuery.keys();
+			while(queryKeywords.hasMoreElements())
 			{
-				System.out.println(termDocs.doc() + "   " + termDocs.freq() + "    " + reader.norms("contents")[termDocs.doc()]);
-				
-			}*/
+				String queryKeyword = queryKeywords.nextElement();
+				TermDocs termDocs = reader.termDocs(new Term("contents", queryKeyword));
+				if(termDocs != null)
+				{
+					while(termDocs.next())
+					{
+						if(similarity.containsKey(termDocs.doc()))
+						{
+							similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+						}
+						else
+						{
+							similarity.put(termDocs.doc(), (float) (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+						}
+					}
+				}
+			}
+			System.out.println("done");
 		}
 		catch(Exception ex)
 		{

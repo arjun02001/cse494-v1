@@ -1,3 +1,5 @@
+//Arjun Mukherji
+
 package edu.asu.cse494;
 import com.lucene.document.Document;
 import com.lucene.document.Field;
@@ -65,7 +67,7 @@ public class TFRanking
 			{
 				Map.Entry<Integer, Float> e = (Map.Entry<Integer, Float>)itr.next();
 				count++;
-				System.out.println(count + ". " + reader.document(e.getKey()).get("url"));
+				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
 				//System.out.println(e.getKey() + " " + e.getValue());
 			}
 			System.out.println(count + " " + "documents found");

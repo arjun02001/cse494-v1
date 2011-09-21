@@ -17,7 +17,7 @@ public class TFRanking
 		{
 			IndexReader reader = IndexReader.open("result3index");
 			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
-			Hashtable<Integer, Float> similarity = new Hashtable<Integer, Float>();
+			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
 			
 			Enumeration<String> queryKeywords = tokenizedQuery.keys();
 			while(queryKeywords.hasMoreElements())
@@ -34,7 +34,7 @@ public class TFRanking
 						}
 						else
 						{
-							similarity.put(termDocs.doc(), (float) (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+							similarity.put(termDocs.doc(), (double) (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
 						}
 					}
 				}
@@ -48,7 +48,7 @@ public class TFRanking
 		}
 	}
 	
-	private static void sortedResult(Hashtable<Integer, Float> similarity, IndexReader reader)
+	private static void sortedResult(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
 		{
@@ -58,7 +58,7 @@ public class TFRanking
 			int count = 0;
 			while(itr.hasNext())
 			{
-				Map.Entry<Integer, Float> e = (Map.Entry<Integer, Float>)itr.next();
+				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
 				count++;
 				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
 				//System.out.println(e.getKey() + " " + e.getValue());
@@ -71,7 +71,7 @@ public class TFRanking
 		}
 	}
 	
-	private static Hashtable<Integer, Float> normalizeSimilarity(Hashtable<Integer, Float> similarity, IndexReader reader)
+	private static Hashtable<Integer, Double> normalizeSimilarity(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
 		{
@@ -122,8 +122,8 @@ class MyComparator implements Comparator
 		int result=0;
 		Map.Entry e1 = (Map.Entry)obj1 ;
 		Map.Entry e2 = (Map.Entry)obj2 ;
-		Float value1 = (Float)e1.getValue();
-		Float value2 = (Float)e2.getValue();
+		Double value1 = (Double)e1.getValue();
+		Double value2 = (Double)e2.getValue();
 		if(value1.compareTo(value2) == 0)
 		{
 			Integer word1=(Integer)e1.getKey();

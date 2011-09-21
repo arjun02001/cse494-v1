@@ -12,7 +12,7 @@ public class TFRanking
 	public static void main(String[] args) 
 	{
 		//String input = "abandonados abandonar";
-		String input = "aboard";
+		String input = "aaa";
 		try
 		{
 			IndexReader reader = IndexReader.open("result3index");

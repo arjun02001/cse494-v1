@@ -4,15 +4,8 @@ package edu.asu.cse494;
 import com.lucene.document.Document;
 import com.lucene.document.Field;
 import com.lucene.index.*;
-
 import java.io.ObjectInputStream.GetField;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class TFRanking 
 {

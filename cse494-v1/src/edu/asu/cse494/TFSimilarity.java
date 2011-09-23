@@ -17,6 +17,7 @@ public class TFSimilarity
 		String input = "aaa";
 		try
 		{
+			long start = System.currentTimeMillis();
 			IndexReader reader = IndexReader.open("result3index");
 			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
 			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
@@ -44,8 +45,8 @@ public class TFSimilarity
 			}
 			similarity = normalizeSimilarity(similarity, reader);
 			sortedResult(similarity, reader);
-			
-			//System.out.println(norm[12036]);
+			long end = System.currentTimeMillis();
+			System.out.println("total time taken " + (end - start) + " ms");
 		}
 		catch(Exception ex)
 		{
@@ -184,7 +185,6 @@ public class TFSimilarity
 			TermEnum termEnum = reader.terms();
 			while(termEnum.next())
 			{
-				System.out.println(termEnum.term().text());
 				if(termEnum.term().field().equals("contents"))
 				{
 					TermDocs termDocs = reader.termDocs(termEnum.term());

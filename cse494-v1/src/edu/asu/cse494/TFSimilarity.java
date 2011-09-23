@@ -11,43 +11,49 @@ import java.util.*;
 public class TFSimilarity 
 {
 	static Double[] norm;
-	static String normFile = "tfnorm.txt";
+	static String normFile = "tfnorm_arjun.txt";
 	public static void main(String[] args) 
 	{
-		String input = "theta grades";
 		try
 		{
-			long start = System.currentTimeMillis();
-			IndexReader reader = IndexReader.open("result3index");
-			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
-			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
-			buildNorm(reader);
-			
-			Enumeration<String> queryKeywords = tokenizedQuery.keys();
-			while(queryKeywords.hasMoreElements())
+			while(true)
 			{
-				String queryKeyword = queryKeywords.nextElement();
-				TermDocs termDocs = reader.termDocs(new Term("contents", queryKeyword));
-				if(termDocs != null)
+				System.out.print("query: ");
+				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+				String input = in.readLine();
+				long start = System.currentTimeMillis();
+				IndexReader reader = IndexReader.open("result3index");
+				Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
+				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
+				buildNorm(reader);
+			
+				Enumeration<String> queryKeywords = tokenizedQuery.keys();
+				while(queryKeywords.hasMoreElements())
 				{
-					while(termDocs.next())
+					String queryKeyword = queryKeywords.nextElement();
+					TermDocs termDocs = reader.termDocs(new Term("contents", queryKeyword));
+					if(termDocs != null)
 					{
-						if(similarity.containsKey(termDocs.doc()))
+						while(termDocs.next())
 						{
-							similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
-						}
-						else
-						{
-							similarity.put(termDocs.doc(), (double) (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+							if(similarity.containsKey(termDocs.doc()))
+							{
+								similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+							}
+							else
+							{
+								similarity.put(termDocs.doc(), (double) (tokenizedQuery.get(queryKeyword) * termDocs.freq()));
+							}
 						}
 					}
 				}
+				similarity = normalizeSimilarity(similarity, reader);
+				long end = System.currentTimeMillis();
+				System.out.println(similarity.size() + " documents found");
+				System.out.println("total time taken " + (end - start) + " ms");
+				sortedResult(similarity, reader);
+				reader.close();
 			}
-			similarity = normalizeSimilarity(similarity, reader);
-			sortedResult(similarity, reader);
-			reader.close();
-			long end = System.currentTimeMillis();
-			System.out.println("total time taken " + (end - start) + " ms");
 		}
 		catch(Exception ex)
 		{
@@ -63,13 +69,16 @@ public class TFSimilarity
 			Collections.sort(myArrayList, new MyComparator());
 			Iterator itr=myArrayList.iterator();
 			int count = 0;
+			boolean more = true;
+			
 			while(itr.hasNext())
 			{
-				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
-				count++;
-				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
+				
+						Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+						count++;
+						System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
+				
 			}
-			System.out.println(count + " " + "documents found");
 		}
 		catch(Exception ex)
 		{

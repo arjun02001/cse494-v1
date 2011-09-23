@@ -15,7 +15,7 @@ public class TFIDFSimilarity
 	static String normFile = "tfIdfNorm.txt";
 	public static void main(String[] args) 
 	{
-		String input = "theta";
+		String input = "theta grades";
 		TermDocs termDocs = null;
 		try
 		{
@@ -154,6 +154,9 @@ public class TFIDFSimilarity
 				norm[Integer.parseInt(value[0])] = value[1].equals("null") ? null : Double.parseDouble(value[1]);
 			}
 			long end = System.currentTimeMillis();
+			fis.close();
+			dis.close();
+			br.close();
 			System.out.println("building norm took " + (end - start) + " ms");
 		}
 		catch(Exception ex)
@@ -191,6 +194,7 @@ public class TFIDFSimilarity
 	//Call this method if you want to create in-memory norm array from scratch. Double norm[] will have the values
 	private static void computeNorm(IndexReader reader)
 	{
+		System.out.println("computing norm only for the first time ..");
 		norm = new Double[reader.numDocs()];
 		int corpusCount = reader.numDocs();
 		TermDocs termDocs = null;
@@ -202,7 +206,6 @@ public class TFIDFSimilarity
 			{
 				if(termEnum.term().field().equals("contents"))
 				{
-					System.out.println(termEnum.term().text());
 					termDocs = reader.termDocs(termEnum.term());
 					if(termDocs != null)
 					{

@@ -14,7 +14,7 @@ public class TFSimilarity
 	static String normFile = "tfnorm.txt";
 	public static void main(String[] args) 
 	{
-		String input = "theta";
+		String input = "theta grades";
 		try
 		{
 			long start = System.currentTimeMillis();
@@ -143,6 +143,9 @@ public class TFSimilarity
 				String value[] = line.split("\\s+");
 				norm[Integer.parseInt(value[0])] = value[1].equals("null") ? null : Double.parseDouble(value[1]);
 			}
+			fis.close();
+			dis.close();
+			br.close();
 			long end = System.currentTimeMillis();
 			System.out.println("building norm took " + (end - start) + " ms");
 		}
@@ -181,6 +184,7 @@ public class TFSimilarity
 	//Call this method if you want to create in-memory norm array from scratch. Double norm[] will have the values
 	private static void computeNorm(IndexReader reader)
 	{
+		System.out.println("computing norm only for the first time ..");
 		norm = new Double[reader.numDocs()];
 		try
 		{

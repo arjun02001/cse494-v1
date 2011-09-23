@@ -12,7 +12,7 @@ import java.util.*;
 public class TFIDFSimilarity 
 {
 	static Double[] norm;
-	static String normFile = "tfIdfNorm.txt";
+	static String normFile = "tfidfnorm_arjun.txt";
 	public static void main(String[] args) 
 	{
 		String input = "arjun grades";

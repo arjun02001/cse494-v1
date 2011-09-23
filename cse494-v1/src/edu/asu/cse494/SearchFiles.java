@@ -56,19 +56,22 @@ public class SearchFiles {
 	System.out.println(hits.length() + " total matching documents");
 
 	final int HITS_PER_PAGE = 10;
-	for (int start = 0; start < hits.length(); start += HITS_PER_PAGE) {
-	  int end = Math.min(hits.length(), start + HITS_PER_PAGE);
-	  for (int i = start; i < end; i++)
+	for (int start = 0; start < hits.length(); start += HITS_PER_PAGE) 
+	{
+		
+		int end = Math.min(hits.length(), start + HITS_PER_PAGE);
+		for (int i = start; i < end; i++)
 		{
-	    System.out.println(i + ". " + hits.doc(i).get("url"));
-	  //  System.out.println(i + ". " + hits.doc(i).toString());
+			System.out.println(i + ". " + hits.doc(i).get("url"));
+			//System.out.println(i + ". " + hits.doc(i).toString());
 		}
-	  if (hits.length() > end) {
-	    System.out.print("more (y/n) ? ");
-	    line = in.readLine();
-	    if (line.length() == 0 || line.charAt(0) == 'n')
-	      break;
-	  }
+		if (hits.length() > end) 
+		{
+			System.out.print("more (y/n) ? ");
+			line = in.readLine();
+			if (line.length() == 0 || line.charAt(0) == 'n')
+				break;
+		}
 	}
       }
       searcher.close();

@@ -68,7 +68,6 @@ public class TFSimilarity
 				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
 				count++;
 				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
-				//System.out.println(e.getKey() + " " + e.getValue());
 			}
 			System.out.println(count + " " + "documents found");
 		}

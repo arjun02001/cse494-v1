@@ -115,7 +115,7 @@ public class TFRanking
 	}
 }
 
-class MyComparator implements Comparator
+/*class MyComparator implements Comparator
 {
 	public int compare(Object obj1, Object obj2)
 	{
@@ -136,4 +136,4 @@ class MyComparator implements Comparator
 		}
 		return result;
 	 }
-}
+}*/

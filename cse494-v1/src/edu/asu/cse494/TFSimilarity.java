@@ -14,7 +14,7 @@ public class TFSimilarity
 	static String normFile = "tfnorm.txt";
 	public static void main(String[] args) 
 	{
-		String input = "aaa";
+		String input = "theta";
 		try
 		{
 			long start = System.currentTimeMillis();
@@ -45,6 +45,7 @@ public class TFSimilarity
 			}
 			similarity = normalizeSimilarity(similarity, reader);
 			sortedResult(similarity, reader);
+			reader.close();
 			long end = System.currentTimeMillis();
 			System.out.println("total time taken " + (end - start) + " ms");
 		}
@@ -166,6 +167,8 @@ public class TFSimilarity
 				pw.println(norm[i]);
 				pw.flush();
 			}
+			fw.close();
+			pw.close();
 			long end = System.currentTimeMillis();
 			System.out.println("writing norm to file took " + (end - start) + " ms");
 		}

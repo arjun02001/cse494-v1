@@ -79,7 +79,7 @@ public class TFIDFSimilarity
 		try
 		{
 			ArrayList myArrayList=new ArrayList(similarity.entrySet());
-			Collections.sort(myArrayList, new MyComparator());
+			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
 			int count = 0;
 			while(itr.hasNext())
@@ -181,4 +181,27 @@ public class TFIDFSimilarity
 			ex.printStackTrace();
 		}
 	}
+}
+
+class MyComparator1 implements Comparator
+{
+	public int compare(Object obj1, Object obj2)
+	{
+		int result=0;
+		Map.Entry e1 = (Map.Entry)obj1 ;
+		Map.Entry e2 = (Map.Entry)obj2 ;
+		Double value1 = (Double)e1.getValue();
+		Double value2 = (Double)e2.getValue();
+		if(value1.compareTo(value2) == 0)
+		{
+			Integer word1=(Integer)e1.getKey();
+			Integer word2=(Integer)e2.getKey();
+			result = word1.compareTo(word2);
+		} 
+		else
+		{
+			result = value2.compareTo(value1);
+		}
+		return result;
+	 }
 }

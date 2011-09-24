@@ -62,8 +62,8 @@ public class TFIDFSimilarity
 				}
 				similarity = normalizeSimilarity(similarity, reader);
 				long end = System.currentTimeMillis();
-				System.out.println(similarity.size() + " documents found");
-				System.out.println("total time taken " + (end - start) + " ms");
+				System.out.println("------" + similarity.size() + " documents found------");
+				System.out.println("------total time taken " + (end - start) + " ms------");
 				sortedResult(similarity, reader);
 			}
 		}
@@ -81,12 +81,27 @@ public class TFIDFSimilarity
 			ArrayList myArrayList=new ArrayList(similarity.entrySet());
 			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
-			int count = 0;
+			int count = 0, maxResult = 0;
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
 				count++;
 				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
+				maxResult++;
+				if(maxResult == 10)
+				{
+					System.out.print("more (y|n) ? ");
+					BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+					String input = in.readLine();
+					if(input.equals("n"))
+					{
+						break;
+					}
+					else
+					{
+						maxResult = 0;
+					}
+				}
 			}
 		}
 		catch(Exception ex)

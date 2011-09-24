@@ -12,52 +12,60 @@ import java.util.*;
 public class TFIDFSimilarity 
 {
 	static Double[] norm;
-	static String normFile = "tfidfnorm_arjun.txt";
 	public static void main(String[] args) 
 	{
-		String input = "arjun grades";
-		TermDocs termDocs = null;
 		try
 		{
-			long start = System.currentTimeMillis();
 			IndexReader reader = IndexReader.open("result3index");
-			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
-			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
-			buildNorm(reader);
-			
-			Enumeration<String> queryKeywords = tokenizedQuery.keys();
+			computeNorm(reader);
+			TermDocs termDocs = null;
 			int corpusCount = reader.numDocs();
-			while(queryKeywords.hasMoreElements())
+			while(true)
 			{
-				String queryKeyword = queryKeywords.nextElement();
-				termDocs = reader.termDocs(new Term("contents", queryKeyword));
-				if(termDocs != null)
+				System.out.print("query: ");
+				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+				String input = in.readLine();
+				if(input.length() == -1)
 				{
-					int count = 0;
-					while(termDocs.next())
-					{
-						count++;
-					}
-					double idf = Math.log((double)(corpusCount / count));
+					break;
+				}
+				long start = System.currentTimeMillis();
+				Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
+				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
+				
+				Enumeration<String> queryKeywords = tokenizedQuery.keys();
+				while(queryKeywords.hasMoreElements())
+				{
+					String queryKeyword = queryKeywords.nextElement();
 					termDocs = reader.termDocs(new Term("contents", queryKeyword));
-					while(termDocs.next())
+					if(termDocs != null)
 					{
-						if(similarity.containsKey(termDocs.doc()))
+						int count = 0;
+						while(termDocs.next())
 						{
-							similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+							count++;
 						}
-						else
+						double idf = Math.log((double)(corpusCount / count));
+						termDocs = reader.termDocs(new Term("contents", queryKeyword));
+						while(termDocs.next())
 						{
-							similarity.put(termDocs.doc(), (double)(tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+							if(similarity.containsKey(termDocs.doc()))
+							{
+								similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+							}
+							else
+							{
+								similarity.put(termDocs.doc(), (double)(tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+							}
 						}
 					}
 				}
+				similarity = normalizeSimilarity(similarity, reader);
+				long end = System.currentTimeMillis();
+				System.out.println(similarity.size() + " documents found");
+				System.out.println("total time taken " + (end - start) + " ms");
+				sortedResult(similarity, reader);
 			}
-			similarity = normalizeSimilarity(similarity, reader);
-			sortedResult(similarity, reader);
-			reader.close();
-			long end = System.currentTimeMillis();
-			System.out.println("total time taken " + (end - start) + " ms");
 		}
 		catch(Exception ex)
 		{
@@ -65,6 +73,7 @@ public class TFIDFSimilarity
 		}
 	}
 	
+	//Call this method to print the sorted result
 	private static void sortedResult(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
@@ -79,7 +88,6 @@ public class TFIDFSimilarity
 				count++;
 				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
 			}
-			System.out.println(count + " " + "documents found");
 		}
 		catch(Exception ex)
 		{
@@ -87,6 +95,7 @@ public class TFIDFSimilarity
 		}
 	}
 	
+	//Call this method to normalize the similarity
 	private static Hashtable<Integer, Double> normalizeSimilarity(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
@@ -105,6 +114,7 @@ public class TFIDFSimilarity
 		return similarity;
 	}
 	
+	//Call this method to split the query into terms and their frequencies
 	private static Hashtable<String, Integer> getTokenizedQuery(String input)
 	{
 		Hashtable<String, Integer> tokenizedQuery = new Hashtable<String, Integer>();
@@ -130,71 +140,12 @@ public class TFIDFSimilarity
 		return tokenizedQuery;
 	}
 	
-	//Call this method to create the in-memory norm array Double norm[] from a file. FASTEST WAY
-	private static void buildNorm(IndexReader reader)
-	{
-		if(!new File(normFile).exists())
-		{
-			computeNorm(reader);
-			writeToFile();
-			return;
-		}
-		norm = new Double[reader.numDocs()];
-		try
-		{
-			long start = System.currentTimeMillis();
-			FileInputStream fis = new FileInputStream(normFile);
-			DataInputStream dis = new DataInputStream(fis);
-			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
-			String line;
-			while((line = br.readLine()) != null)
-			{
-				String value[] = line.split("\\s+");
-				norm[Integer.parseInt(value[0])] = value[1].equals("null") ? null : Double.parseDouble(value[1]);
-			}
-			long end = System.currentTimeMillis();
-			fis.close();
-			dis.close();
-			br.close();
-			System.out.println("building norm took " + (end - start) + " ms");
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
-	
-	//Call this method if you want to write the in-memory norm array 'Double norm[]' to a file
-	private static void writeToFile()
-	{
-		try
-		{
-			long start = System.currentTimeMillis();
-			FileWriter fw = new FileWriter(normFile);
-			PrintWriter pw = new PrintWriter(fw);
-			for(int i = 0; i < norm.length; i++)
-			{
-				pw.print(i);
-				pw.print(" ");
-				pw.println(norm[i]);
-				pw.flush();
-			}
-			fw.close();
-			pw.close();
-			long end = System.currentTimeMillis();
-			System.out.println("writing norm to file took " + (end - start) + " ms");
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
-	
 	//Call this method if you want to create in-memory norm array from scratch. Double norm[] will have the values
 	private static void computeNorm(IndexReader reader)
 	{
-		System.out.println("computing norm only for the first time ..");
+		System.out.println("computing norm only for the first time .. may take around 20-40 secs");
 		norm = new Double[reader.numDocs()];
+		Arrays.fill(norm, 0d);
 		int corpusCount = reader.numDocs();
 		TermDocs termDocs = null;
 		try
@@ -217,14 +168,7 @@ public class TFIDFSimilarity
 						termDocs = reader.termDocs(termEnum.term());
 						while(termDocs.next())
 						{
-							if(norm[termDocs.doc()] != null)
-							{
-								norm[termDocs.doc()] += Math.pow((termDocs.freq() * idf), 2);
-							}
-							else
-							{
-								norm[termDocs.doc()] = Math.pow((termDocs.freq() * idf), 2);
-							}
+							norm[termDocs.doc()] += Math.pow((termDocs.freq() * idf), 2);
 						}
 					}
 				}

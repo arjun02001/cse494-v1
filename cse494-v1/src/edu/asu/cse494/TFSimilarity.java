@@ -73,11 +73,9 @@ public class TFSimilarity
 			
 			while(itr.hasNext())
 			{
-				
-						Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
-						count++;
-						System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
-				
+				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+				count++;
+				System.out.println(count + ". " + reader.document(e.getKey()).get("url") + "  DocID-" + e.getKey());
 			}
 		}
 		catch(Exception ex)

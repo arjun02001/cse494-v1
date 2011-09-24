@@ -11,21 +11,25 @@ import java.util.*;
 public class TFSimilarity 
 {
 	static Double[] norm;
-	static String normFile = "tfnorm_arjun.txt";
 	public static void main(String[] args) 
 	{
 		try
 		{
+			IndexReader reader = IndexReader.open("result3index");
+			computeNorm(reader);
 			while(true)
 			{
 				System.out.print("query: ");
 				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 				String input = in.readLine();
-				long start = System.currentTimeMillis();
-				IndexReader reader = IndexReader.open("result3index");
+				if(input.length() == -1)
+				{
+					break;
+				}
+				
+				long start = System.currentTimeMillis();				
 				Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
 				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
-				buildNorm(reader);
 			
 				Enumeration<String> queryKeywords = tokenizedQuery.keys();
 				while(queryKeywords.hasMoreElements())
@@ -52,7 +56,6 @@ public class TFSimilarity
 				System.out.println(similarity.size() + " documents found");
 				System.out.println("total time taken " + (end - start) + " ms");
 				sortedResult(similarity, reader);
-				reader.close();
 			}
 		}
 		catch(Exception ex)
@@ -61,6 +64,7 @@ public class TFSimilarity
 		}
 	}
 	
+	//Call this method to print the sorted result
 	private static void sortedResult(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
@@ -69,7 +73,6 @@ public class TFSimilarity
 			Collections.sort(myArrayList, new MyComparator());
 			Iterator itr=myArrayList.iterator();
 			int count = 0;
-			boolean more = true;
 			
 			while(itr.hasNext())
 			{
@@ -84,6 +87,7 @@ public class TFSimilarity
 		}
 	}
 	
+	//Call this method to normalize the similarity
 	private static Hashtable<Integer, Double> normalizeSimilarity(Hashtable<Integer, Double> similarity, IndexReader reader)
 	{
 		try
@@ -102,6 +106,7 @@ public class TFSimilarity
 		return similarity;
 	}
 	
+	//Call this method to split the query into terms and their frequencies
 	private static Hashtable<String, Integer> getTokenizedQuery(String input)
 	{
 		Hashtable<String, Integer> tokenizedQuery = new Hashtable<String, Integer>();
@@ -127,71 +132,12 @@ public class TFSimilarity
 		return tokenizedQuery;
 	}
 	
-	//Call this method to create the in-memory norm array Double norm[] from a file. FASTEST WAY
-	private static void buildNorm(IndexReader reader)
-	{
-		if(!new File(normFile).exists())
-		{
-			computeNorm(reader);
-			writeToFile();
-			return;
-		}
-		norm = new Double[reader.numDocs()];
-		try
-		{
-			long start = System.currentTimeMillis();
-			FileInputStream fis = new FileInputStream(normFile);
-			DataInputStream dis = new DataInputStream(fis);
-			BufferedReader br = new BufferedReader(new InputStreamReader(dis));
-			String line;
-			while((line = br.readLine()) != null)
-			{
-				String value[] = line.split("\\s+");
-				norm[Integer.parseInt(value[0])] = value[1].equals("null") ? null : Double.parseDouble(value[1]);
-			}
-			fis.close();
-			dis.close();
-			br.close();
-			long end = System.currentTimeMillis();
-			System.out.println("building norm took " + (end - start) + " ms");
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
-	
-	//Call this method if you want to write the in-memory norm array 'Double norm[]' to a file
-	private static void writeToFile()
-	{
-		try
-		{
-			long start = System.currentTimeMillis();
-			FileWriter fw = new FileWriter(normFile);
-			PrintWriter pw = new PrintWriter(fw);
-			for(int i = 0; i < norm.length; i++)
-			{
-				pw.print(i);
-				pw.print(" ");
-				pw.println(norm[i]);
-				pw.flush();
-			}
-			fw.close();
-			pw.close();
-			long end = System.currentTimeMillis();
-			System.out.println("writing norm to file took " + (end - start) + " ms");
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
-	
 	//Call this method if you want to create in-memory norm array from scratch. Double norm[] will have the values
 	private static void computeNorm(IndexReader reader)
 	{
-		System.out.println("computing norm only for the first time ..");
+		System.out.println("computing norm only for the first time .. may take around 15-20 secs");
 		norm = new Double[reader.numDocs()];
+		Arrays.fill(norm, 0d);
 		try
 		{
 			long start = System.currentTimeMillis();
@@ -205,14 +151,7 @@ public class TFSimilarity
 					{
 						while(termDocs.next())
 						{
-							if(norm[termDocs.doc()] != null)
-							{
-								norm[termDocs.doc()] += Math.pow(termDocs.freq(), 2);
-							}
-							else
-							{
-								norm[termDocs.doc()] = Math.pow(termDocs.freq(), 2);
-							}
+							norm[termDocs.doc()] += Math.pow(termDocs.freq(), 2);
 						}
 					}
 				}

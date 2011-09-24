@@ -26,7 +26,6 @@ public class TFSimilarity
 				{
 					break;
 				}
-				
 				long start = System.currentTimeMillis();				
 				Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
 				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
@@ -73,7 +72,6 @@ public class TFSimilarity
 			Collections.sort(myArrayList, new MyComparator());
 			Iterator itr=myArrayList.iterator();
 			int count = 0;
-			
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();

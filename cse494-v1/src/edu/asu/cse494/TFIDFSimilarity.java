@@ -34,6 +34,7 @@ public class TFIDFSimilarity
 				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
 				
 				Enumeration<String> queryKeywords = tokenizedQuery.keys();
+				long dpStart = System.currentTimeMillis();
 				while(queryKeywords.hasMoreElements())
 				{
 					String queryKeyword = queryKeywords.nextElement();
@@ -60,11 +61,11 @@ public class TFIDFSimilarity
 						}
 					}
 				}
+				long dpEnd = System.currentTimeMillis();
+				//System.out.println("dot product took " + (dpEnd - dpStart) + " ms");
 				similarity = normalizeSimilarity(similarity, reader);
-				long end = System.currentTimeMillis();
 				System.out.println("------" + similarity.size() + " documents found------");
-				System.out.println("------total time taken " + (end - start) + " ms------");
-				sortedResult(similarity, reader);
+				sortedResult(similarity, reader, start);
 			}
 		}
 		catch(Exception ex)
@@ -74,12 +75,16 @@ public class TFIDFSimilarity
 	}
 	
 	//Call this method to print the sorted result
-	private static void sortedResult(Hashtable<Integer, Double> similarity, IndexReader reader)
+	private static void sortedResult(Hashtable<Integer, Double> similarity, IndexReader reader, long start)
 	{
 		try
 		{
+			long start1 = System.currentTimeMillis();
 			ArrayList myArrayList=new ArrayList(similarity.entrySet());
 			Collections.sort(myArrayList, new MyComparator1());
+			long end = System.currentTimeMillis();
+			//System.out.println("sorting took " + (end - start1) + " ms");
+			System.out.println("------total time taken " + (end - start) + " ms------");
 			Iterator itr=myArrayList.iterator();
 			int count = 0, maxResult = 0;
 			while(itr.hasNext())
@@ -115,12 +120,15 @@ public class TFIDFSimilarity
 	{
 		try
 		{
+			long start = System.currentTimeMillis();
 			Enumeration<Integer> similarityList = similarity.keys();
 			while(similarityList.hasMoreElements())
 			{
 				Integer documentID = similarityList.nextElement();
 				similarity.put(documentID, similarity.get(documentID) / Math.sqrt(norm[documentID]));
 			}
+			long end = System.currentTimeMillis();
+			//System.out.println("normalizing similarity took " + (end - start) + " ms");
 		}
 		catch(Exception ex)
 		{

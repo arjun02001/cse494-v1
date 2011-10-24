@@ -20,7 +20,6 @@ import com.lucene.index.TermEnum;
 public class AH 
 {
 	Hashtable<Integer, Integer> baseSet = new Hashtable<Integer, Integer>();
-	Hashtable<Integer, Integer> inverseBaseSet = new Hashtable<Integer, Integer>();
 	ArrayList<Integer> docs = new ArrayList<Integer>();
 	TFIDFSimilarity sim = null;
 	int topKDocs = 5, count = 0, numDocs = 25053;
@@ -59,9 +58,10 @@ public class AH
 		{
 			while(true)
 			{
-				baseSet = getRootSet();
-				baseSet = getBaseSet();
-				computeAH(baseSet);
+				getRootSet();
+				getBaseSet();
+				computeAH();
+				displayAH();
 			}
 		}
 		catch(Exception ex)
@@ -70,31 +70,29 @@ public class AH
 		}
 	}
 	
-	public Hashtable<Integer, Integer> getRootSet()
+	public void getRootSet()
 	{
 		try
 		{
+			Hashtable<Integer, Double> similarity = sim.computeSimilarity();
 			System.out.println("how many documents from TF/IDF results do you want to fetch for AH computation?");
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			topKDocs = Integer.parseInt(in.readLine());
-		
-			docs = sim.getTopKResults(sim.computeSimilarity(), topKDocs);
+			docs = sim.getTopKResults(similarity, topKDocs);
 			count = 0;
+			baseSet.clear();
 			for(int doc:docs)
 			{
-				baseSet.put(doc, count);
-				inverseBaseSet.put(count, doc);
-				count++;
+				baseSet.put(doc, count++);
 			}
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
-		return baseSet;
 	}
 	
-	public Hashtable<Integer, Integer> getBaseSet()
+	public void getBaseSet()
 	{
 		try
 		{
@@ -107,9 +105,7 @@ public class AH
 				{
 					if(!baseSet.containsKey(link))
 					{
-						baseSet.put(link, count);
-						inverseBaseSet.put(count, link);
-						count++;
+						baseSet.put(link, count++);
 					}
 				}
 				int[] citations = la.getCitations(doc);
@@ -117,9 +113,7 @@ public class AH
 				{
 					if(!baseSet.containsKey(citation))
 					{
-						baseSet.put(citation, count);
-						inverseBaseSet.put(count, citation);
-						count++;
+						baseSet.put(citation, count++);
 					}
 				}
 			}
@@ -128,10 +122,9 @@ public class AH
 		{
 			ex.printStackTrace();
 		}
-		return baseSet;
 	}
 	
-	public void computeAH(Hashtable<Integer, Integer> baseSet)
+	public void computeAH()
 	{
 		try
 		{
@@ -188,7 +181,58 @@ public class AH
 				previousHub = hub;
 				iterationCount++;
 			}
-			System.out.println("\nno. of iterations = " + iterationCount);
+			System.out.println("\npower iteration converged in " + iterationCount + " iterations. threshold = " + threshold);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public void displayAH()
+	{
+		try
+		{
+			System.out.println();
+			System.out.println("top 10 authorities are");
+			System.out.println("-----------------------------");
+			display(authority);
+			System.out.println();
+			System.out.println("top 10 hub are");
+			System.out.println("-----------------------------");
+			display(hub);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void display(double[] vector)
+	{
+		try
+		{
+			IndexReader reader = IndexReader.open("result3index");
+			int k = (vector.length >= 10) ? 10 : vector.length;
+			Hashtable<Integer, Double> docValue = new Hashtable<Integer, Double>();
+			for(int docid:baseSet.keySet())
+			{
+				docValue.put(docid, vector[baseSet.get(docid)]);
+			}
+			ArrayList myArrayList=new ArrayList(docValue.entrySet());
+			Collections.sort(myArrayList, new MyComparator1());
+			Iterator itr=myArrayList.iterator();
+			int counter = 0;
+			while(itr.hasNext())
+			{
+				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+				System.out.println((counter + 1) + ". docid = " + e.getKey() + "  " + reader.document(e.getKey()).get("url"));
+				counter++;
+				if(counter >= k)
+				{
+					break;
+				}
+			}
 		}
 		catch(Exception ex)
 		{
@@ -274,25 +318,5 @@ public class AH
 			ex.printStackTrace();
 		}
 		return matT;
-	}
-	
-	public void printMatrix(double[][] mat, int size)
-	{
-		try
-		{
-			System.out.println(size);
-			for(int i = 0; i < size; i++)
-			{
-				for(int j = 0; j < size; j++)
-				{
-					System.out.print((int)mat[i][j] + " ");
-				}
-				System.out.println();
-			}
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-		}
 	}
 }

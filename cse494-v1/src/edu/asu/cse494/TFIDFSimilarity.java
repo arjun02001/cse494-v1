@@ -12,59 +12,29 @@ import java.util.*;
 public class TFIDFSimilarity 
 {
 	static Double[] norm;
-	public static void main(String[] args) 
+	long start;
+	public TFIDFSimilarity()
 	{
 		try
 		{
 			IndexReader reader = IndexReader.open("result3index");
 			computeNorm(reader);
-			TermDocs termDocs = null;
-			int corpusCount = reader.numDocs();
+			reader.close();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public void startCalculation()
+	{
+		try
+		{
+			IndexReader reader = IndexReader.open("result3index");
 			while(true)
 			{
-				System.out.print("query: ");
-				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-				String input = in.readLine();
-				if(input.length() == -1)
-				{
-					break;
-				}
-				long start = System.currentTimeMillis();
-				Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
-				Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
-				
-				Enumeration<String> queryKeywords = tokenizedQuery.keys();
-				long dpStart = System.currentTimeMillis();
-				while(queryKeywords.hasMoreElements())
-				{
-					String queryKeyword = queryKeywords.nextElement();
-					termDocs = reader.termDocs(new Term("contents", queryKeyword));
-					if(termDocs != null)
-					{
-						int count = 0;
-						while(termDocs.next())
-						{
-							count++;
-						}
-						double idf = Math.log((double)(corpusCount / count));
-						termDocs = reader.termDocs(new Term("contents", queryKeyword));
-						while(termDocs.next())
-						{
-							if(similarity.containsKey(termDocs.doc()))
-							{
-								similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
-							}
-							else
-							{
-								similarity.put(termDocs.doc(), (double)(tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
-							}
-						}
-					}
-				}
-				long dpEnd = System.currentTimeMillis();
-				//System.out.println("dot product took " + (dpEnd - dpStart) + " ms");
-				similarity = normalizeSimilarity(similarity, reader);
-				System.out.println("------" + similarity.size() + " documents found------");
+				Hashtable<Integer, Double> similarity = computeSimilarity();
 				sortedResult(similarity, reader, start);
 			}
 		}
@@ -72,6 +42,106 @@ public class TFIDFSimilarity
 		{
 			ex.printStackTrace();
 		}
+	}
+	
+	public Hashtable<Integer, Double> computeSimilarity()
+	{
+		try
+		{
+			TermDocs termDocs = null;
+			IndexReader reader = IndexReader.open("result3index");
+			int corpusCount = reader.numDocs();
+			
+			System.out.print("query: ");
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			String input = in.readLine();
+			if(input.length() == -1)
+			{
+				return null;
+			}
+			start = System.currentTimeMillis();
+			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
+			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
+			
+			Enumeration<String> queryKeywords = tokenizedQuery.keys();
+			long dpStart = System.currentTimeMillis();
+			while(queryKeywords.hasMoreElements())
+			{
+				String queryKeyword = queryKeywords.nextElement();
+				termDocs = reader.termDocs(new Term("contents", queryKeyword));
+				if(termDocs != null)
+				{
+					int count = 0;
+					while(termDocs.next())
+					{
+						count++;
+					}
+					double idf = Math.log((double)(corpusCount / count));
+					termDocs = reader.termDocs(new Term("contents", queryKeyword));
+					while(termDocs.next())
+					{
+						if(similarity.containsKey(termDocs.doc()))
+						{
+							similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+						}
+						else
+						{
+							similarity.put(termDocs.doc(), (double)(tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+						}
+					}
+				}
+			}
+			long dpEnd = System.currentTimeMillis();
+			//System.out.println("dot product took " + (dpEnd - dpStart) + " ms");
+			similarity = normalizeSimilarity(similarity, reader);
+			System.out.println("------" + similarity.size() + " documents found------");
+			return similarity;
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static void main(String[] args) 
+	{
+		try
+		{
+			TFIDFSimilarity sim = new TFIDFSimilarity();
+			sim.startCalculation();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public ArrayList<Integer> getTopKResults(Hashtable<Integer, Double> similarity, int k)
+	{
+		ArrayList<Integer> docs = new ArrayList<Integer>();
+		try
+		{
+			ArrayList myArrayList=new ArrayList(similarity.entrySet());
+			Collections.sort(myArrayList, new MyComparator1());
+			Iterator itr=myArrayList.iterator();
+			int counter = 0;
+			while(itr.hasNext())
+			{
+				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+				counter++;
+				if(counter > k)
+				{
+					break;
+				}
+				docs.add(e.getKey());
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return docs;
 	}
 	
 	//Call this method to print the sorted result

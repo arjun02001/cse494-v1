@@ -1,5 +1,6 @@
 package edu.asu.cse494;
 
+import java.awt.image.ConvolveOp;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -19,9 +20,11 @@ import com.lucene.index.TermEnum;
 public class AH 
 {
 	Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
+	Hashtable<Integer, Integer> baseSet = new Hashtable<Integer, Integer>();
 	ArrayList<Integer> docs = new ArrayList<Integer>();
 	TFIDFSimilarity sim = null;
-	int topKDocs = 5;
+	int topKDocs = 5, count = 0, numDocs = 25053;
+	double[][] mat;
 	
 	public static void main(String[] args) 
 	{
@@ -54,11 +57,9 @@ public class AH
 		{
 			while(true)
 			{
-				docs = getBaseSet();
-				for(int i:docs)
-				{
-					System.out.println(i);
-				}
+				baseSet = getRootSet();
+				baseSet = getBaseSet();
+				mat = computeAH(baseSet);
 			}
 		}
 		catch(Exception ex)
@@ -67,7 +68,7 @@ public class AH
 		}
 	}
 	
-	public ArrayList<Integer> getBaseSet()
+	public Hashtable<Integer, Integer> getRootSet()
 	{
 		try
 		{
@@ -78,11 +79,95 @@ public class AH
 			topKDocs = Integer.parseInt(in.readLine());
 		
 			docs = sim.getTopKResults(similarity, topKDocs);
+			count = 0;
+			for(int doc:docs)
+			{
+				baseSet.put(doc, count++);
+			}
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
-		return docs;
+		return baseSet;
+	}
+	
+	public Hashtable<Integer, Integer> getBaseSet()
+	{
+		try
+		{
+			LinkAnalysis.numDocs = numDocs;
+			LinkAnalysis la = new LinkAnalysis();
+			for(int doc:docs)
+			{
+				int[] links = la.getLinks(doc);
+				for(int link:links)
+				{
+					if(!baseSet.containsKey(link))
+					{
+						baseSet.put(link, count++);
+					}
+				}
+				int[] citations = la.getCitations(doc);
+				for(int citation:citations)
+				{
+					if(!baseSet.containsKey(citation))
+					{
+						baseSet.put(citation, count++);
+					}
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return baseSet;
+	}
+	
+	public double[][] computeAH(Hashtable<Integer, Integer> baseSet)
+	{
+		try
+		{
+			LinkAnalysis.numDocs = numDocs;
+			LinkAnalysis la = new LinkAnalysis();
+			mat = new double[baseSet.size()][baseSet.size()];
+			for(int docid:baseSet.keySet())
+			{
+				for(int link:la.getLinks(docid))
+				{
+					if(baseSet.containsKey(link))
+					{
+						mat[baseSet.get(docid)][baseSet.get(link)] = 1;
+					}
+				}
+			}
+			printMatrix(mat, baseSet.size());
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return mat;
+	}
+	
+	public void printMatrix(double[][] mat, int size)
+	{
+		try
+		{
+			System.out.println(size);
+			for(int i = 0; i < size; i++)
+			{
+				for(int j = 0; j < size; j++)
+				{
+					System.out.print((int)mat[i][j] + " ");
+				}
+				System.out.println();
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 }

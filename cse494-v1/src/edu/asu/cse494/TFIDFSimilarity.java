@@ -52,7 +52,8 @@ public class TFIDFSimilarity
 			IndexReader reader = IndexReader.open("result3index");
 			int corpusCount = reader.numDocs();
 			
-			System.out.print("query: ");
+			
+			System.out.print("\nquery: ");
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			String input = in.readLine();
 			if(input.length() == -1)

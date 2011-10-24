@@ -19,12 +19,14 @@ import com.lucene.index.TermEnum;
 
 public class AH 
 {
-	Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
 	Hashtable<Integer, Integer> baseSet = new Hashtable<Integer, Integer>();
+	Hashtable<Integer, Integer> inverseBaseSet = new Hashtable<Integer, Integer>();
 	ArrayList<Integer> docs = new ArrayList<Integer>();
 	TFIDFSimilarity sim = null;
 	int topKDocs = 5, count = 0, numDocs = 25053;
+	double threshold = 0.00000000001;
 	double[][] mat;
+	double[] hub, authority;
 	
 	public static void main(String[] args) 
 	{
@@ -59,7 +61,7 @@ public class AH
 			{
 				baseSet = getRootSet();
 				baseSet = getBaseSet();
-				mat = computeAH(baseSet);
+				computeAH(baseSet);
 			}
 		}
 		catch(Exception ex)
@@ -72,17 +74,17 @@ public class AH
 	{
 		try
 		{
-			similarity = sim.computeSimilarity();
-			
-			System.out.println("how many documents from TF/IDF results do you want to fetch ?");
+			System.out.println("how many documents from TF/IDF results do you want to fetch for AH computation?");
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			topKDocs = Integer.parseInt(in.readLine());
 		
-			docs = sim.getTopKResults(similarity, topKDocs);
+			docs = sim.getTopKResults(sim.computeSimilarity(), topKDocs);
 			count = 0;
 			for(int doc:docs)
 			{
-				baseSet.put(doc, count++);
+				baseSet.put(doc, count);
+				inverseBaseSet.put(count, doc);
+				count++;
 			}
 		}
 		catch(Exception ex)
@@ -105,7 +107,9 @@ public class AH
 				{
 					if(!baseSet.containsKey(link))
 					{
-						baseSet.put(link, count++);
+						baseSet.put(link, count);
+						inverseBaseSet.put(count, link);
+						count++;
 					}
 				}
 				int[] citations = la.getCitations(doc);
@@ -113,7 +117,9 @@ public class AH
 				{
 					if(!baseSet.containsKey(citation))
 					{
-						baseSet.put(citation, count++);
+						baseSet.put(citation, count);
+						inverseBaseSet.put(count, citation);
+						count++;
 					}
 				}
 			}
@@ -125,7 +131,7 @@ public class AH
 		return baseSet;
 	}
 	
-	public double[][] computeAH(Hashtable<Integer, Integer> baseSet)
+	public void computeAH(Hashtable<Integer, Integer> baseSet)
 	{
 		try
 		{
@@ -142,13 +148,132 @@ public class AH
 					}
 				}
 			}
-			printMatrix(mat, baseSet.size());
+			powerIterate(mat);
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
-		return mat;
+	}
+	
+	public void powerIterate(double[][] mat)
+	{
+		try
+		{
+			double[][] matT = getTranspose(mat);
+			double[] previousHub = new double[mat.length];
+			double[] previousAuthority = new double[mat.length];
+			int iterationCount = 0;
+			hub = new double[mat.length];
+			authority = new double[mat.length];
+			for(int i = 0; i < mat.length; i++)
+			{
+				hub[i] = 1;
+			}
+			for(int i = 0; i < mat.length; i++)
+			{
+				previousAuthority[i] = previousHub[i] = 0;
+			}
+			for(;;)
+			{
+				authority = matrixMultiply(matT, hub);
+				hub = matrixMultiply(mat, authority);
+				authority = normalizeVector(authority);
+				hub = normalizeVector(hub);
+				if(computeDistance(authority, previousAuthority) < threshold && computeDistance(hub, previousHub) < threshold)
+				{
+					break;
+				}
+				previousAuthority = authority;
+				previousHub = hub;
+				iterationCount++;
+			}
+			System.out.println("\nno. of iterations = " + iterationCount);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private double computeDistance(double[] a, double[] b)
+	{
+		double norm = 0;
+		try
+		{
+			for(int i = 0; i < a.length; i++)
+			{
+				norm += Math.pow(a[i] - b[i], 2);
+			}
+			norm = Math.sqrt(norm);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return norm;
+	}
+	
+	public double[] normalizeVector(double[] v)
+	{
+		try
+		{
+			double norm = 0;
+			for(double d:v)
+			{
+				norm += Math.pow(d, 2);
+			}
+			norm = Math.sqrt(norm);
+			for(int i = 0; i < v.length; i++)
+			{
+				v[i] /= norm;
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return v;
+	}
+	
+	public double[] matrixMultiply(double[][] a, double[] b)
+	{
+		double[] c = new double[a.length];
+		try
+		{
+			for(int i = 0; i < a.length; i++)
+			{
+				for(int j = 0; j < a.length; j++)
+				{
+					c[i] += a[i][j] * b[j];
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return c;
+	}
+	
+	public double[][] getTranspose(double[][] mat)
+	{
+		double[][] matT = new double[mat.length][mat.length];
+		try
+		{
+			for(int i = 0; i < mat.length; i++)
+			{
+				for(int j = 0; j < mat.length; j++)
+				{
+					matT[j][i] = mat[i][j];
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return matT;
 	}
 	
 	public void printMatrix(double[][] mat, int size)

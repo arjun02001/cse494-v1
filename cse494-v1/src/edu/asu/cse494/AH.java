@@ -173,7 +173,7 @@ public class AH
 				hub = matrixMultiply(mat, authority);
 				authority = normalizeVector(authority);
 				hub = normalizeVector(hub);
-				if(computeDistance(authority, previousAuthority) < threshold && computeDistance(hub, previousHub) < threshold)
+				if(computeDistance(authority, previousAuthority) <= threshold && computeDistance(hub, previousHub) <= threshold)
 				{
 					break;
 				}

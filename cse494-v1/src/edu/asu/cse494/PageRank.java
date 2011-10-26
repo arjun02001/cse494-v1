@@ -26,8 +26,8 @@ public class PageRank
 	
 	public PageRank()
 	{
-		//sim = new TFIDFSimilarity();
-		//pageRank = getPageRank();		
+		sim = new TFIDFSimilarity();
+		pageRank = getPageRank();		
 	}
 	
 	private double[] getPageRank() 

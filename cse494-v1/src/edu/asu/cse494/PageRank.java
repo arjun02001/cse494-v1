@@ -2,14 +2,21 @@ package edu.asu.cse494;
 
 import com.lucene.index.IndexReader;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 public class PageRank 
 {
 	TFIDFSimilarity sim = null;
-	int corpusCount = 25053;
+	int corpusCount = 25053, topKDocs = 10;
 	FileWriter fw = null;
 	BufferedWriter bw = null;
-	double c = 0.85, k = 1.0 / 25053.0, threshold = 0.00000000001;
+	double c = 0.85, k = 1.0 / 25053.0, threshold = 0.00000000001, w = 0.85;
+	double []pageRank = null;
+	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();
 	
 	public static void main(String[] args) 
 	{
@@ -20,15 +27,118 @@ public class PageRank
 	public PageRank()
 	{
 		//sim = new TFIDFSimilarity();
+		//pageRank = getPageRank();		
 	}
 	
+	private double[] getPageRank() 
+	{
+		try
+		{
+			double [] pageRank = new double[corpusCount];
+			
+			FileReader fr = new FileReader("pagerank.txt");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";	
+			int count = 0;
+			
+			while((line = br.readLine()) != null)
+			{
+				if(line.length() != 0)
+				{
+					pageRank[count++] = Double.valueOf(line).doubleValue();
+				}
+			}
+			return pageRank;
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
 	public void startCalculation()
 	{
 		try
 		{
 			//constructMatrix();
 			//double[] r1 = powerIterate();
-			computePageRank();
+			//computePageRank();
+			while(true)
+			{
+				getRootSet();
+				computeResults();
+			}
+			/*FileReader fr = new FileReader("mt_new.txt");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			int count = 0;
+			FileWriter fw = new FileWriter("bhaskar.txt");
+			BufferedWriter bw = new BufferedWriter(fw);
+			while((line = br.readLine()) != null)
+			{
+				
+				bw.write(line + "\n");
+				
+				count++;
+				if(count >= 3)
+				{
+					break;
+				}
+			}
+			bw.close();
+			fw.close();
+			br.close();
+			fr.close();*/
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public void getRootSet()
+	{
+		try
+		{
+			Hashtable<Integer, Double> similarity = sim.computeSimilarity();
+			//System.out.println("how many documents from TF/IDF results do you want to fetch for AH computation?");
+			//BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			//topKDocs = Integer.parseInt(in.readLine());
+			rootSet = sim.getTopKResults(similarity, topKDocs);
+			System.out.println("choose a value for w between 0 and 1");
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			w = Double.valueOf(in.readLine()).doubleValue();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public void computeResults()
+	{
+		try
+		{
+			IndexReader reader = IndexReader.open("result3index");
+			
+			Hashtable<Integer, Double> results = new Hashtable<Integer, Double>();
+			for(int doc:rootSet.keySet())
+			{
+				results.put(doc, (w * pageRank[doc]) + ((1-w) * rootSet.get(doc)));
+			}
+			
+			ArrayList myArrayList=new ArrayList(results.entrySet());
+			Collections.sort(myArrayList, new MyComparator1());
+			Iterator itr=myArrayList.iterator();
+			int counter = 0;
+			while(itr.hasNext())
+			{
+				Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+				System.out.println((counter + 1) + ". docid = " + e.getKey() + "  " + reader.document(e.getKey()).get("url"));
+				counter++;
+			}
+			reader.close();	
 		}
 		catch(Exception ex)
 		{

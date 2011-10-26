@@ -20,9 +20,9 @@ import com.lucene.index.TermEnum;
 public class AH 
 {
 	Hashtable<Integer, Integer> baseSet = new Hashtable<Integer, Integer>();
-	ArrayList<Integer> docs = new ArrayList<Integer>();
+	Hashtable<Integer, Double> docs = new Hashtable<Integer, Double>();
 	TFIDFSimilarity sim = null;
-	int topKDocs = 5, count = 0, numDocs = 25053;
+	int topKDocs = 10, count = 0, numDocs = 25053;
 	double threshold = 0.00000000001;
 	double[][] mat;
 	double[] hub, authority;
@@ -75,13 +75,13 @@ public class AH
 		try
 		{
 			Hashtable<Integer, Double> similarity = sim.computeSimilarity();
-			System.out.println("how many documents from TF/IDF results do you want to fetch for AH computation?");
-			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-			topKDocs = Integer.parseInt(in.readLine());
+			//System.out.println("how many documents from TF/IDF results do you want to fetch for AH computation?");
+			//BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			//topKDocs = Integer.parseInt(in.readLine());
 			docs = sim.getTopKResults(similarity, topKDocs);
 			count = 0;
 			baseSet.clear();
-			for(int doc:docs)
+			for(int doc:docs.keySet())
 			{
 				baseSet.put(doc, count++);
 			}
@@ -98,7 +98,7 @@ public class AH
 		{
 			LinkAnalysis.numDocs = numDocs;
 			LinkAnalysis la = new LinkAnalysis();
-			for(int doc:docs)
+			for(int doc:docs.keySet())
 			{
 				int[] links = la.getLinks(doc);
 				for(int link:links)

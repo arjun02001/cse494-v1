@@ -118,9 +118,9 @@ public class TFIDFSimilarity
 		}
 	}
 	
-	public ArrayList<Integer> getTopKResults(Hashtable<Integer, Double> similarity, int k)
+	public Hashtable<Integer, Double> getTopKResults(Hashtable<Integer, Double> similarity, int k)
 	{
-		ArrayList<Integer> docs = new ArrayList<Integer>();
+		Hashtable<Integer, Double> docs = new Hashtable<Integer, Double>();
 		try
 		{
 			ArrayList myArrayList=new ArrayList(similarity.entrySet());
@@ -135,7 +135,7 @@ public class TFIDFSimilarity
 				{
 					break;
 				}
-				docs.add(e.getKey());
+				docs.put(e.getKey(), e.getValue());
 			}
 		}
 		catch(Exception ex)

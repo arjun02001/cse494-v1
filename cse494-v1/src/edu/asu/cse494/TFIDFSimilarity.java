@@ -11,15 +11,38 @@ import java.util.*;
 
 public class TFIDFSimilarity 
 {
-	static Double[] norm;
+	static double[] norm;
 	long start;
 	public TFIDFSimilarity()
 	{
 		try
 		{
-			IndexReader reader = IndexReader.open("result3index");
-			computeNorm(reader);
-			reader.close();
+			//IndexReader reader = IndexReader.open("result3index");
+			//computeNorm(reader);
+			getNorm();
+			//reader.close();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void getNorm()
+	{
+		try
+		{
+			norm = new double[25053];
+			FileReader fr = new FileReader("norm.txt");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			int count = 0;
+			while((line = br.readLine()) != null)
+			{
+				norm[count++] = Double.valueOf(line).doubleValue();
+			}
+			br.close();
+			fr.close();
 		}
 		catch(Exception ex)
 		{
@@ -238,7 +261,7 @@ public class TFIDFSimilarity
 	private static void computeNorm(IndexReader reader)
 	{
 		System.out.println("computing norm only for the first time .. may take around 20-40 secs");
-		norm = new Double[reader.numDocs()];
+		norm = new double[reader.numDocs()];
 		Arrays.fill(norm, 0d);
 		int corpusCount = reader.numDocs();
 		TermDocs termDocs = null;

@@ -14,8 +14,10 @@ public class PageRank
 	int corpusCount = 25053, topKDocs = 10;
 	FileWriter fw = null;
 	BufferedWriter bw = null;
+	//define the constant values
 	double c = 0.85, k = 1.0 / 25053.0, threshold = 0.00000000001, w = 0.85;
 	double []pageRank = null;
+	//hashtable to hold the rootset of docs and their similarity
 	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();
 	
 	public static void main(String[] args) 
@@ -26,10 +28,13 @@ public class PageRank
 	
 	public PageRank()
 	{
+		//create an instance of tf-idf class used to get the similarity score
 		sim = new TFIDFSimilarity();
+		//read the pagerank of all docs in an array
 		pageRank = getPageRank();		
 	}
 	
+	//method to read the page rank of all documents from a file
 	private double[] getPageRank() 
 	{
 		try
@@ -61,35 +66,17 @@ public class PageRank
 	{
 		try
 		{
+			//method to construct M*. no need to run this method everytime
 			//constructMatrix();
+			//method to perform power iteration on M* and get the final vector. no need to run this everytime
 			//double[] r1 = powerIterate();
+			//method to perform nomalization on the final R vector and store the pagerank in a file
 			//computePageRank();
 			while(true)
 			{
 				getRootSet();
 				computeResults();
 			}
-			/*FileReader fr = new FileReader("mt_new.txt");
-			BufferedReader br = new BufferedReader(fr);
-			String line = "";
-			int count = 0;
-			FileWriter fw = new FileWriter("bhaskar.txt");
-			BufferedWriter bw = new BufferedWriter(fw);
-			while((line = br.readLine()) != null)
-			{
-				
-				bw.write(line + "\n");
-				
-				count++;
-				if(count >= 3)
-				{
-					break;
-				}
-			}
-			bw.close();
-			fw.close();
-			br.close();
-			fr.close();*/
 		}
 		catch(Exception ex)
 		{
@@ -97,6 +84,7 @@ public class PageRank
 		}
 	}
 	
+	//method to compute similarity and get the top k documents according to tf-idf score
 	public void getRootSet()
 	{
 		try
@@ -108,6 +96,7 @@ public class PageRank
 			rootSet = sim.getTopKResults(similarity, topKDocs);
 			System.out.println("choose a value for w between 0 and 1");
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			//accept the value of w from the user
 			w = Double.valueOf(in.readLine()).doubleValue();
 		}
 		catch(Exception ex)
@@ -116,6 +105,8 @@ public class PageRank
 		}
 	}
 	
+	//method to compute the final result by combining page rank with tf-idf similarity
+	//also display the sorted results
 	public void computeResults()
 	{
 		try
@@ -146,6 +137,8 @@ public class PageRank
 		}
 	}
 	
+	//after the power iteration converges, this method normalizes the final R vector
+	// to get the page rank for every doc
 	public void computePageRank()
 	{
 		try
@@ -171,6 +164,7 @@ public class PageRank
 			}
 			br.close();
 			fr.close();
+			//store the final pagerank in pagerank.txt
 			FileWriter fw = new FileWriter("pagerank.txt");
 			BufferedWriter bw = new BufferedWriter(fw);
 			for(int i = 0; i < pageRank.length; i++)
@@ -188,6 +182,7 @@ public class PageRank
 		}
 	}
 	
+	//method to perform power iteration
 	public double[] powerIterate()
 	{
 		double[] r0 = new double[corpusCount];
@@ -234,6 +229,7 @@ public class PageRank
 				}
 				br.close();
 				fr.close();
+				//stop the power iteration if a threshold is reached
 				if(computeDistance(r0, r1) <= threshold)
 				{
 					break;
@@ -258,6 +254,7 @@ public class PageRank
 		return r1;
 	}
 	
+	//get the distance between 2 vectors. used during power iteration
 	private double computeDistance(double[] a, double[] b)
 	{
 		double norm = 0;
@@ -276,6 +273,7 @@ public class PageRank
 		return norm;
 	}
 	
+	//method to construct M*.
 	public void constructMatrix()
 	{
 		try

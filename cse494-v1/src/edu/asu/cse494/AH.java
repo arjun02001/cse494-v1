@@ -19,12 +19,16 @@ import com.lucene.index.TermEnum;
 
 public class AH 
 {
+	//hashtable to hold the docid and their corresponding index in the adjacency matrix
 	Hashtable<Integer, Integer> baseSet = new Hashtable<Integer, Integer>();
+	//hashtable to hold the docid and their similarity score
 	Hashtable<Integer, Double> docs = new Hashtable<Integer, Double>();
 	TFIDFSimilarity sim = null;
 	int topKDocs = 10, count = 0, numDocs = 25053;
 	double threshold = 0.00000000001;
+	//2d array to hold the adjacency matrix
 	double[][] mat;
+	//arrays to hold the authority and hub score
 	double[] hub, authority;
 	
 	public static void main(String[] args) 
@@ -44,6 +48,8 @@ public class AH
 	{
 		try
 		{
+			//create a new instance of the tf-idf similarity class. this will take user query
+			//and compute the similarity
 			sim = new TFIDFSimilarity();
 		}
 		catch(Exception ex)
@@ -70,6 +76,8 @@ public class AH
 		}
 	}
 	
+	//method to calculate the tf-idf similarity and get the top 10 results
+	//this will constitute our rootset
 	public void getRootSet()
 	{
 		try
@@ -92,6 +100,7 @@ public class AH
 		}
 	}
 	
+	//method to construct the baseset by utilizing linkanalysis.java.
 	public void getBaseSet()
 	{
 		try
@@ -100,6 +109,7 @@ public class AH
 			LinkAnalysis la = new LinkAnalysis();
 			for(int doc:docs.keySet())
 			{
+				//get all links for a doc
 				int[] links = la.getLinks(doc);
 				for(int link:links)
 				{
@@ -108,6 +118,7 @@ public class AH
 						baseSet.put(link, count++);
 					}
 				}
+				//get all citations for a doc
 				int[] citations = la.getCitations(doc);
 				for(int citation:citations)
 				{
@@ -124,6 +135,7 @@ public class AH
 		}
 	}
 	
+	//method to calculate the authority hub score
 	public void computeAH()
 	{
 		try
@@ -131,6 +143,7 @@ public class AH
 			LinkAnalysis.numDocs = numDocs;
 			LinkAnalysis la = new LinkAnalysis();
 			mat = new double[baseSet.size()][baseSet.size()];
+			//construct the adjacency matrix
 			for(int docid:baseSet.keySet())
 			{
 				for(int link:la.getLinks(docid))
@@ -141,6 +154,7 @@ public class AH
 					}
 				}
 			}
+			//power iterate on the matrix
 			powerIterate(mat);
 		}
 		catch(Exception ex)
@@ -149,16 +163,20 @@ public class AH
 		}
 	}
 	
+	//method to perform power iteration
 	public void powerIterate(double[][] mat)
 	{
 		try
 		{
 			double[][] matT = getTranspose(mat);
+			//to keep track of the hub values for the previous iteration
 			double[] previousHub = new double[mat.length];
+			//to keep track of the authority values for the previous iteration
 			double[] previousAuthority = new double[mat.length];
 			int iterationCount = 0;
 			hub = new double[mat.length];
 			authority = new double[mat.length];
+			//initialize all hub values to 1
 			for(int i = 0; i < mat.length; i++)
 			{
 				hub[i] = 1;
@@ -169,14 +187,19 @@ public class AH
 			}
 			for(;;)
 			{
+				//get the authority values by multiplying the matTranspose with the hub
 				authority = matrixMultiply(matT, hub);
+				//get the hub values by multiplying the mat with authority
 				hub = matrixMultiply(mat, authority);
+				//normalize the vectors
 				authority = normalizeVector(authority);
 				hub = normalizeVector(hub);
+				//check if the values change by a threshold
 				if(computeDistance(authority, previousAuthority) <= threshold && computeDistance(hub, previousHub) <= threshold)
 				{
 					break;
 				}
+				//continue power iteration if the threshold is not reached
 				previousAuthority = authority;
 				previousHub = hub;
 				iterationCount++;
@@ -189,6 +212,7 @@ public class AH
 		}
 	}
 	
+	//method to display the authority and hub values
 	public void displayAH()
 	{
 		try
@@ -208,6 +232,7 @@ public class AH
 		}
 	}
 	
+	//method to sort and display the top k values of a vector
 	private void display(double[] vector)
 	{
 		try
@@ -240,6 +265,8 @@ public class AH
 		}
 	}
 	
+	//method to get the difference between 2 vectors
+	//used during power iteration to check if the threshold has been reached
 	private double computeDistance(double[] a, double[] b)
 	{
 		double norm = 0;
@@ -258,6 +285,7 @@ public class AH
 		return norm;
 	}
 	
+	//method to normalize a vector
 	public double[] normalizeVector(double[] v)
 	{
 		try
@@ -280,6 +308,7 @@ public class AH
 		return v;
 	}
 	
+	//method to multiply a matrix with a vector
 	public double[] matrixMultiply(double[][] a, double[] b)
 	{
 		double[] c = new double[a.length];
@@ -300,6 +329,7 @@ public class AH
 		return c;
 	}
 	
+	//method to return the transpose of a matrix
 	public double[][] getTranspose(double[][] mat)
 	{
 		double[][] matT = new double[mat.length][mat.length];

@@ -15,7 +15,7 @@ public class PageRank
 	FileWriter fw = null;
 	BufferedWriter bw = null;
 	//define the constant values
-	double c = 0.85, k = 1.0 / 25053.0, threshold = 0.00000000001, w = 0.85;
+	double c = 0.85, k = 1.0 / 25053.0, threshold = 0.000001, w = 0.85;
 	double []pageRank = null;
 	//hashtable to hold the rootset of docs and their similarity
 	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();

@@ -87,6 +87,16 @@ public class AH
 			//BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			//topKDocs = Integer.parseInt(in.readLine());
 			docs = sim.getTopKResults(similarity, topKDocs);
+			System.out.println("top " + topKDocs + " tf-idf results are");
+			System.out.println("-----------------------------------------");
+			count = 0;
+			IndexReader reader = IndexReader.open("result3index");
+			for(int doc:docs.keySet())
+			{
+				System.out.println((count + 1) + ". docid = " + doc + "  " + reader.document(doc).get("url"));
+				count++;
+			}
+			reader.close();
 			count = 0;
 			baseSet.clear();
 			for(int doc:docs.keySet())

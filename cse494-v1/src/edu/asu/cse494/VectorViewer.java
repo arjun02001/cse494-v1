@@ -30,12 +30,12 @@ public class VectorViewer {
 				//pw.println("Term = " + termval.text());
 				
 				   //Add following here to retrieve the <docNo,Freq> pair for each term
-				   /*TermDocs termdocs = reader.termDocs(termval);
+				   TermDocs termdocs = reader.termDocs(termval);
 				   while(termdocs.next())
 				   {
 					   System.out.println("               " + "DocNo = " + termdocs.doc() + "  Freq = " + termdocs.freq());
-					   pw.println("               " + "DocNo = " + termdocs.doc() + "  Freq = " + termdocs.freq());
-				   }*/
+					   //pw.println("               " + "DocNo = " + termdocs.doc() + "  Freq = " + termdocs.freq());
+				   }
 				/*
 				   //to retrieve the <docNo,Freq,<pos1,......posn>> call
 				   TermPositions termpositions = termval.termPositions(termval)

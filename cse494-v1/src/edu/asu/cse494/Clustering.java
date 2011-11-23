@@ -35,16 +35,15 @@ public class Clustering
 			{
 				String[] content = line.split(";");
 				int doc = Integer.parseInt(content[0]);
-				System.out.println(doc);
-				if(content.length > 1 && content[1].length() > 0)
+				//System.out.println(doc);
+				Hashtable<String, Integer> innerMap = new Hashtable<String, Integer>();
+				String[] wordFreqs = content[1].split(",");
+				for(String wordFreq : wordFreqs)
 				{
-					Hashtable<String, Integer> innerMap = new Hashtable<String, Integer>();
-					for(String wordFreq : content[1].split(","))
-					{
-						innerMap.put(wordFreq.split(" ")[0], Integer.parseInt(wordFreq.split(" ")[1]));
-					}
-					forwardIndex.put(doc, innerMap);
+					String[] text = wordFreq.split(" ");
+					innerMap.put(text[0], Integer.parseInt(text[1]));
 				}
+				forwardIndex.put(doc, innerMap);
 			}
 			br.close();
 			fr.close();

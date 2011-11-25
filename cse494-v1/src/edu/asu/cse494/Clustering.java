@@ -17,9 +17,10 @@ public class Clustering
 {
 	Hashtable<Integer, Hashtable<String, Double>> forwardIndex = new Hashtable<Integer, Hashtable<String,Double>>();
 	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();
+	Hashtable<Integer, ArrayList<Integer>> cluster = new Hashtable<Integer, ArrayList<Integer>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
-	int topKDocs = 50, clusterSize = 3;
+	int topKDocs = 10, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
 	
 	public static void main(String[] args) 
 	{
@@ -32,13 +33,54 @@ public class Clustering
 	public Clustering()
 	{
 		sim = new TFIDFSimilarity();
-		norm = sim.norm;
+		norm = getNorm();
+	}
+	
+	private double[] getNorm()
+	{
+		norm = new double[25053];
+		try
+		{
+			FileReader fr = new FileReader("tfnorm.txt");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			int count = 0;
+			while((line = br.readLine()) != null)
+			{
+				norm[count++] = Double.valueOf(line).doubleValue();
+			}
+			br.close();
+			fr.close();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return norm;
+	}
+	
+	private double getNorm(Hashtable<String, Double> doc)
+	{
+		double norm = 0.0;
+		try
+		{
+			for(Map.Entry<String, Double> entry : doc.entrySet())
+			{
+				norm += Math.pow(entry.getValue(), 2);
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return Math.sqrt(norm);
 	}
 	
 	private void startCalculation()
 	{
 		getRootSet();
-		System.out.println(documentDocumentSimilarity(0, 0));
+		pseudoDoc = corpusCount;
+		formClusters();
 	}
 	
 	private void getRootSet()
@@ -53,20 +95,138 @@ public class Clustering
 		}
 	}
 	
+	private void formClusters()
+	{
+		try
+		{
+			pickSeeds();
+			for(int i = 0; i < 100; i++)
+			{
+				assignDocsToClusters();
+				getNewSeeds();
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void getNewSeeds()
+	{
+		try
+		{
+			ArrayList<Integer> newSeeds = new ArrayList<Integer>();
+			System.out.println();
+			for(Map.Entry<Integer, ArrayList<Integer>> entry : cluster.entrySet())
+			{
+				Hashtable<String, Double> centroid = getCentroid(entry.getValue());
+				System.out.println();
+				System.out.print(entry.getKey() + "-> ");
+				for(int i : entry.getValue())
+				{
+					System.out.print(i + ", ");
+				}
+				newSeeds.add(pseudoDoc);
+				forwardIndex.put(pseudoDoc++, centroid);
+			}
+			pickSeeds(newSeeds);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void pickSeeds(ArrayList<Integer> seeds)
+	{
+		try
+		{
+			cluster.clear();
+			for(int seed : seeds)
+			{
+				cluster.put(seed, new ArrayList<Integer>());
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void pickSeeds()
+	{
+		try
+		{
+			int count = 0;
+			cluster.clear();
+			for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
+			{
+				cluster.put(entry.getKey(), new ArrayList<Integer>());
+				count++;
+				if(count >= clusterSize)
+				{
+					break;
+				}
+			}
+			/*cluster.put(16674, new ArrayList<Integer>());
+			cluster.put(17013, new ArrayList<Integer>());
+			cluster.put(16808, new ArrayList<Integer>());*/
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void assignDocsToClusters()
+	{
+		try
+		{
+			int docWithMaxSim = -1;
+			double maxSim = 0.0;
+			for(Map.Entry<Integer, Double> rootSetEntry : rootSet.entrySet())
+			{
+				docWithMaxSim = -1;
+				maxSim = 0.0;
+				for(Map.Entry<Integer, ArrayList<Integer>> clusterEntry : cluster.entrySet())
+				{
+					double sim = documentDocumentSimilarity(rootSetEntry.getKey(), clusterEntry.getKey());
+					if(sim > maxSim)
+					{
+						maxSim = sim;
+						docWithMaxSim = clusterEntry.getKey();
+					}
+				}
+				ArrayList<Integer> docsInCluster = cluster.get(docWithMaxSim);
+				docsInCluster.add(rootSetEntry.getKey());
+				cluster.put(docWithMaxSim, docsInCluster);
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
 	private double documentDocumentSimilarity(int doc1, int doc2)
 	{
 		double sim = 0.0;
+		Hashtable<String, Double> termFreq1 = null;
+		Hashtable<String, Double> termFreq2 = null;
 		try
 		{
-			Hashtable<String, Double> termFreq1 = forwardIndex.get(doc1);
-			Hashtable<String, Double> termFreq2 = forwardIndex.get(doc2);
+			termFreq1 = forwardIndex.get(doc1);
+			termFreq2 = forwardIndex.get(doc2);
 			sim = (termFreq1.size() < termFreq2.size()) ? documentDocumentDotProduct(termFreq1, termFreq2) : documentDocumentDotProduct(termFreq2, termFreq1);
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
-		return sim / (norm[doc1] * norm[doc2]);
+		double norm1 = (doc1 > (corpusCount - 1)) ? getNorm(termFreq1) : Math.sqrt(norm[doc1]);
+		double norm2 = (doc2 > (corpusCount - 1)) ? getNorm(termFreq2) : Math.sqrt(norm[doc2]);
+		return sim / (norm1 * norm2);
 	}
 	
 	private double documentDocumentDotProduct(Hashtable<String, Double> termFreq1, Hashtable<String, Double> termFreq2)
@@ -87,6 +247,39 @@ public class Clustering
 			ex.printStackTrace();
 		}
 		return sim;
+	}
+	
+	private Hashtable<String, Double> getCentroid(ArrayList<Integer> docs)
+	{
+		Hashtable<String, Double> centroid = new Hashtable<String, Double>();
+		try
+		{
+			for(int doc : docs)
+			{
+				Hashtable<String, Double> termFreq = new Hashtable<String, Double>();
+				termFreq = forwardIndex.get(doc);
+				for(Map.Entry<String, Double> entry : termFreq.entrySet())
+				{
+					if(centroid.containsKey(entry.getKey()))
+					{
+						centroid.put(entry.getKey(), centroid.get(entry.getKey()) + entry.getValue());
+					}
+					else
+					{
+						centroid.put(entry.getKey(), entry.getValue());
+					}
+				}
+			}
+			for(Map.Entry<String, Double> entry : centroid.entrySet())
+			{
+				centroid.put(entry.getKey(), entry.getValue() / docs.size());
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return centroid;
 	}
 	
 	private void loadForwardIndex()

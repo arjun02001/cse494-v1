@@ -18,6 +18,7 @@ public class Clustering
 	Hashtable<Integer, Hashtable<String, Double>> forwardIndex = new Hashtable<Integer, Hashtable<String,Double>>();
 	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();
 	Hashtable<Integer, ArrayList<Integer>> cluster = new Hashtable<Integer, ArrayList<Integer>>();
+	Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
 	int topKDocs = 10, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
@@ -97,13 +98,33 @@ public class Clustering
 	
 	private void formClusters()
 	{
+		//Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
 		try
 		{
 			pickSeeds();
-			for(int i = 0; i < 100; i++)
+			while(true)
 			{
+				previousCluster = cluster;
 				assignDocsToClusters();
-				getNewSeeds();
+				if(checkConvergence(previousCluster, cluster))
+				{
+					break;
+				}
+				ArrayList<Integer> newSeeds = new ArrayList<Integer>();
+				System.out.println();
+				for(Map.Entry<Integer, ArrayList<Integer>> entry : cluster.entrySet())
+				{
+					Hashtable<String, Double> centroid = getCentroid(entry.getValue());
+					System.out.println();
+					System.out.print(entry.getKey() + "-> ");
+					for(int doc : entry.getValue())
+					{
+						System.out.print(doc + ", ");
+					}
+					newSeeds.add(pseudoDoc);
+					forwardIndex.put(pseudoDoc++, centroid);
+				}
+				pickSeeds(newSeeds);
 			}
 		}
 		catch(Exception ex)
@@ -112,30 +133,23 @@ public class Clustering
 		}
 	}
 	
-	private void getNewSeeds()
+	private boolean checkConvergence(Hashtable<Integer, ArrayList<Integer>> previous, Hashtable<Integer, ArrayList<Integer>> current)
 	{
 		try
 		{
-			ArrayList<Integer> newSeeds = new ArrayList<Integer>();
-			System.out.println();
-			for(Map.Entry<Integer, ArrayList<Integer>> entry : cluster.entrySet())
+			for(Map.Entry<Integer, ArrayList<Integer>> entry : previous.entrySet())
 			{
-				Hashtable<String, Double> centroid = getCentroid(entry.getValue());
-				System.out.println();
-				System.out.print(entry.getKey() + "-> ");
-				for(int i : entry.getValue())
+				if(!current.containsValue(entry.getValue()))
 				{
-					System.out.print(i + ", ");
+					return false;
 				}
-				newSeeds.add(pseudoDoc);
-				forwardIndex.put(pseudoDoc++, centroid);
 			}
-			pickSeeds(newSeeds);
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
+		return true;
 	}
 	
 	private void pickSeeds(ArrayList<Integer> seeds)

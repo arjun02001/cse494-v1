@@ -21,7 +21,7 @@ public class Clustering
 	Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
-	int topKDocs = 10, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
+	int topKDocs = 50, clusterSize = 5, pseudoDoc = 25053, corpusCount = 25053;
 	
 	public static void main(String[] args) 
 	{
@@ -104,12 +104,7 @@ public class Clustering
 			pickSeeds();
 			while(true)
 			{
-				previousCluster = cluster;
-				assignDocsToClusters();
-				if(checkConvergence(previousCluster, cluster))
-				{
-					break;
-				}
+				assignDocsToClusters();	
 				ArrayList<Integer> newSeeds = new ArrayList<Integer>();
 				System.out.println();
 				for(Map.Entry<Integer, ArrayList<Integer>> entry : cluster.entrySet())
@@ -124,6 +119,11 @@ public class Clustering
 					newSeeds.add(pseudoDoc);
 					forwardIndex.put(pseudoDoc++, centroid);
 				}
+				if(checkConvergence(previousCluster, cluster))
+				{
+					break;
+				}
+				previousCluster = deepCopy(cluster);
 				pickSeeds(newSeeds);
 			}
 		}
@@ -133,10 +133,36 @@ public class Clustering
 		}
 	}
 	
+	private Hashtable<Integer, ArrayList<Integer>> deepCopy(Hashtable<Integer, ArrayList<Integer>> ht)
+	{
+		Hashtable<Integer, ArrayList<Integer>> newHT = new Hashtable<Integer, ArrayList<Integer>>();
+		try
+		{
+			for(Map.Entry<Integer, ArrayList<Integer>> entry : ht.entrySet())
+			{
+				ArrayList<Integer> al = new ArrayList<Integer>();
+				for(int i : entry.getValue())
+				{
+					al.add(i);
+				}
+				newHT.put(entry.getKey(), al);
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return newHT;
+	}
+	
 	private boolean checkConvergence(Hashtable<Integer, ArrayList<Integer>> previous, Hashtable<Integer, ArrayList<Integer>> current)
 	{
 		try
 		{
+			if(previous.size() != current.size())
+			{
+				return false;
+			}
 			for(Map.Entry<Integer, ArrayList<Integer>> entry : previous.entrySet())
 			{
 				if(!current.containsValue(entry.getValue()))
@@ -174,7 +200,7 @@ public class Clustering
 		{
 			int count = 0;
 			cluster.clear();
-			for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
+			/*for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
 			{
 				cluster.put(entry.getKey(), new ArrayList<Integer>());
 				count++;
@@ -182,10 +208,12 @@ public class Clustering
 				{
 					break;
 				}
-			}
-			/*cluster.put(16674, new ArrayList<Integer>());
-			cluster.put(17013, new ArrayList<Integer>());
-			cluster.put(16808, new ArrayList<Integer>());*/
+			}*/
+			cluster.put(2364, new ArrayList<Integer>());
+			cluster.put(2406, new ArrayList<Integer>());
+			cluster.put(2411, new ArrayList<Integer>());
+			cluster.put(1065, new ArrayList<Integer>());
+			cluster.put(2370, new ArrayList<Integer>());
 		}
 		catch(Exception ex)
 		{

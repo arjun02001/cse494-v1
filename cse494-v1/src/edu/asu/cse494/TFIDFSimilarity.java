@@ -11,7 +11,7 @@ import java.util.*;
 
 public class TFIDFSimilarity 
 {
-	public Hashtable<String, Integer> tokenizedQuery = null;
+	public Hashtable<String, Double> tokenizedQuery = null;
 	static double[] norm;
 	long start;
 	
@@ -77,7 +77,6 @@ public class TFIDFSimilarity
 			IndexReader reader = IndexReader.open("result3index");
 			int corpusCount = reader.numDocs();
 			
-			
 			System.out.print("\nquery: ");
 			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 			String input = in.readLine();
@@ -85,8 +84,63 @@ public class TFIDFSimilarity
 			{
 				return null;
 			}
-			start = System.currentTimeMillis();
 			tokenizedQuery = getTokenizedQuery(input);
+			
+			start = System.currentTimeMillis();
+			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
+			
+			Enumeration<String> queryKeywords = tokenizedQuery.keys();
+			long dpStart = System.currentTimeMillis();
+			while(queryKeywords.hasMoreElements())
+			{
+				String queryKeyword = queryKeywords.nextElement();
+				termDocs = reader.termDocs(new Term("contents", queryKeyword));
+				if(termDocs != null)
+				{
+					int count = 0;
+					while(termDocs.next())
+					{
+						count++;
+					}
+					double idf = Math.log((double)(corpusCount / count));
+					termDocs = reader.termDocs(new Term("contents", queryKeyword));
+					while(termDocs.next())
+					{
+						if(similarity.containsKey(termDocs.doc()))
+						{
+							similarity.put(termDocs.doc(), similarity.get(termDocs.doc()) + (tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+						}
+						else
+						{
+							similarity.put(termDocs.doc(), (double)(tokenizedQuery.get(queryKeyword) * termDocs.freq() * idf));
+						}
+					}
+				}
+			}
+			long dpEnd = System.currentTimeMillis();
+			//System.out.println("dot product took " + (dpEnd - dpStart) + " ms");
+			similarity = normalizeSimilarity(similarity, reader);
+			System.out.println("------" + similarity.size() + " documents found------");
+			return similarity;
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
+	public Hashtable<Integer, Double> computeSimilarity(Hashtable<String, Double> query)
+	{
+		try
+		{
+			TermDocs termDocs = null;
+			IndexReader reader = IndexReader.open("result3index");
+			int corpusCount = reader.numDocs();
+			
+			tokenizedQuery = query;
+			
+			start = System.currentTimeMillis();
 			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
 			
 			Enumeration<String> queryKeywords = tokenizedQuery.keys();
@@ -234,9 +288,9 @@ public class TFIDFSimilarity
 	}
 	
 	//Call this method to split the query into terms and their frequencies
-	private static Hashtable<String, Integer> getTokenizedQuery(String input)
+	private static Hashtable<String, Double> getTokenizedQuery(String input)
 	{
-		Hashtable<String, Integer> tokenizedQuery = new Hashtable<String, Integer>();
+		Hashtable<String, Double> tokenizedQuery = new Hashtable<String, Double>();
 		try
 		{
 			String[] mainQuery = input.trim().toLowerCase().split("\\s+");
@@ -244,11 +298,11 @@ public class TFIDFSimilarity
 			{
 				if(tokenizedQuery.containsKey(query))
 				{
-					tokenizedQuery.put(query, tokenizedQuery.get(query) + 1);
+					tokenizedQuery.put(query, tokenizedQuery.get(query) + 1.0);
 				}
 				else
 				{
-					tokenizedQuery.put(query, 1);
+					tokenizedQuery.put(query, 1.0);
 				}
 			}
 		}

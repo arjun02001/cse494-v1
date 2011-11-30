@@ -200,7 +200,7 @@ public class Clustering
 		{
 			int count = 0;
 			cluster.clear();
-			/*for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
+			for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
 			{
 				cluster.put(entry.getKey(), new ArrayList<Integer>());
 				count++;
@@ -208,12 +208,12 @@ public class Clustering
 				{
 					break;
 				}
-			}*/
-			cluster.put(2364, new ArrayList<Integer>());
+			}
+			/*cluster.put(2364, new ArrayList<Integer>());
 			cluster.put(2406, new ArrayList<Integer>());
 			cluster.put(2411, new ArrayList<Integer>());
 			cluster.put(1065, new ArrayList<Integer>());
-			cluster.put(2370, new ArrayList<Integer>());
+			cluster.put(2370, new ArrayList<Integer>());*/
 		}
 		catch(Exception ex)
 		{

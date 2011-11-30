@@ -82,7 +82,7 @@ public class Snippet
 		int termPos = -1;
 		try
 		{
-			for(Entry<String, Integer> entry : sim.tokenizedQuery.entrySet())
+			for(Entry<String, Double> entry : sim.tokenizedQuery.entrySet())
 			{
 				termPos = getTermPosition(doc, entry.getKey());
 				if(termPos != -1)

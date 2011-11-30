@@ -23,6 +23,7 @@ public class Snippet
 		//snippet.createPositionInfo();
 		//snippet.savePositionInfo();
 		snippet.loadPositionInfo();
+		System.out.println("done");
 	}
 	
 	public Snippet()
@@ -113,7 +114,7 @@ public class Snippet
 			PrintWriter pw = new PrintWriter(fw);
 			for(Map.Entry<Integer, Hashtable<Integer, String>> entry : positionInfo.entrySet())
 			{
-				System.out.println(entry.getKey());
+				//System.out.println(entry.getKey());
 				pw.print(entry.getKey() + ";");
 				for(Map.Entry<Integer, String> innerEntry : entry.getValue().entrySet())
 				{

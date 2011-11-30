@@ -11,8 +11,10 @@ import java.util.*;
 
 public class TFIDFSimilarity 
 {
+	public Hashtable<String, Integer> tokenizedQuery = null;
 	static double[] norm;
 	long start;
+	
 	public TFIDFSimilarity()
 	{
 		try
@@ -84,7 +86,7 @@ public class TFIDFSimilarity
 				return null;
 			}
 			start = System.currentTimeMillis();
-			Hashtable<String, Integer> tokenizedQuery = getTokenizedQuery(input);
+			tokenizedQuery = getTokenizedQuery(input);
 			Hashtable<Integer, Double> similarity = new Hashtable<Integer, Double>();
 			
 			Enumeration<String> queryKeywords = tokenizedQuery.keys();

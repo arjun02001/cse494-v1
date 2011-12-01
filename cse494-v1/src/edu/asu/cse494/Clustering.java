@@ -143,7 +143,57 @@ public class Clustering
 	{
 		try
 		{
+			int currentCentroid = 0;
+			Hashtable<String, ArrayList<Integer>> termCentroid = new Hashtable<String, ArrayList<Integer>>();
+			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
+			{
+				currentCentroid = entry.getKey();
+				for(Map.Entry<Integer, Double> innerMap : entry.getValue().entrySet())
+				{
+					Hashtable<String, Double> docContent = forwardIndex.get(innerMap.getKey());
+					for(Map.Entry<String, Double> term : docContent.entrySet())
+					{
+						if(!termCentroid.containsKey(term.getKey()))
+						{
+							ArrayList<Integer> centroidList = new ArrayList<Integer>();
+							centroidList.add(currentCentroid);
+							termCentroid.put(term.getKey(), centroidList);
+						}
+						else
+						{
+							if(!termCentroid.get(term.getKey()).contains(currentCentroid))
+							{
+								ArrayList<Integer> centroidList = termCentroid.get(term.getKey());
+								centroidList.add(currentCentroid);
+								termCentroid.put(term.getKey(), centroidList);
+							}
+						}
+					}
+				}
+			}
 			
+			Hashtable<Integer, String> summary = new Hashtable<Integer, String>();
+			for(Map.Entry<String, ArrayList<Integer>> entry : termCentroid.entrySet())
+			{
+				if(entry.getValue().size() == 1)
+				{
+					if(summary.containsKey(entry.getValue().get(0)))
+					{
+						summary.put(entry.getValue().get(0), summary.get(entry.getValue().get(0)) + " " + entry.getKey());
+					}
+					else
+					{
+						summary.put(entry.getValue().get(0), entry.getKey());
+					}
+				}
+			}
+			int count = 0;
+			for(Map.Entry<Integer, String> entry : summary.entrySet())
+			{
+				System.out.println();
+				System.out.println("cluster " + ++count + " summary-> ");
+				System.out.println(entry.getValue());
+			}
 		}
 		catch(Exception ex)
 		{

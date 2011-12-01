@@ -131,6 +131,19 @@ public class Clustering
 				pickSeeds(newSeeds);
 			}
 			showResults();
+			showSummary();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void showSummary()
+	{
+		try
+		{
+			
 		}
 		catch(Exception ex)
 		{

@@ -171,7 +171,15 @@ public class Clustering
 					}
 				}
 			}
-			
+			/*for(Map.Entry<String, ArrayList<Integer>> entry : termCentroid.entrySet())
+			{
+				System.out.println();
+				System.out.print(entry.getKey() + "-> ");
+				for(int i : entry.getValue())
+				{
+					System.out.print(i + ", ");
+				}
+			}*/
 			Hashtable<Integer, String> summary = new Hashtable<Integer, String>();
 			for(Map.Entry<String, ArrayList<Integer>> entry : termCentroid.entrySet())
 			{
@@ -191,8 +199,15 @@ public class Clustering
 			for(Map.Entry<Integer, String> entry : summary.entrySet())
 			{
 				System.out.println();
-				System.out.println("cluster " + ++count + " summary-> ");
-				System.out.println(entry.getValue());
+				System.out.println("cluster " + (++count) + " summary-> ");
+				if(entry.getValue().length() >= 200)
+				{
+					System.out.println(entry.getValue().substring(0, 200));
+				}
+				else
+				{
+					System.out.println(entry.getValue());
+				}
 			}
 		}
 		catch(Exception ex)

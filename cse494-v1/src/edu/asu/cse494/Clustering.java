@@ -21,7 +21,7 @@ public class Clustering
 	Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
-	int topKDocs = 50, clusterSize = 5, pseudoDoc = 25053, corpusCount = 25053;
+	int topKDocs = 50, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
 	
 	public static void main(String[] args) 
 	{
@@ -79,9 +79,12 @@ public class Clustering
 	
 	private void startCalculation()
 	{
-		getRootSet();
-		pseudoDoc = corpusCount;
-		formClusters();
+		while(true)
+		{
+			getRootSet();
+			pseudoDoc = corpusCount;
+			formClusters();
+		}
 	}
 	
 	private void getRootSet()
@@ -98,7 +101,6 @@ public class Clustering
 	
 	private void formClusters()
 	{
-		//Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
 		try
 		{
 			pickSeeds();
@@ -111,7 +113,7 @@ public class Clustering
 				{
 					Hashtable<String, Double> centroid = getCentroid(entry.getValue());
 					System.out.println();
-					System.out.print(entry.getKey() + "-> ");
+					System.out.print(/*entry.getKey() + */"-> ");
 					for(int doc : entry.getValue())
 					{
 						System.out.print(doc + ", ");
@@ -329,6 +331,7 @@ public class Clustering
 		try
 		{
 			long start = System.currentTimeMillis();
+			System.out.println("loading forward index. may take 5-10 secs");
 			FileReader fr = new FileReader("forwardindex.txt");
 			BufferedReader br = new BufferedReader(fr);
 			String line = "";
@@ -349,7 +352,7 @@ public class Clustering
 			br.close();
 			fr.close();
 			long end = System.currentTimeMillis();
-			System.out.println("loading forward index took " + (end - start) + " ms");
+			//System.out.println("loading forward index took " + (end - start) + " ms");
 		}
 		catch(Exception ex)
 		{

@@ -61,11 +61,13 @@ public class Snippet
 			ArrayList myArrayList=new ArrayList(docs.entrySet());
 			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
+			System.out.println();
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Double> entry = (Map.Entry<Integer, Double>)itr.next();
-				System.out.println((count + 1) + ". docid = " + entry.getKey() + "  " + reader.document(entry.getKey()).get("url"));
-				System.out.println(getSnippet(entry.getKey()));
+				System.out.println((count + 1) + ". docid = " + entry.getKey() + "  title = " + reader.document(entry.getKey()).get("title"));
+				System.out.println("   url = " + reader.document(entry.getKey()).get("url"));
+				System.out.println("   " + getSnippet(entry.getKey()));
 				count++;
 			}
 			reader.close();
@@ -94,7 +96,7 @@ public class Snippet
 						pos++;
 					}
 				}
-				snippet += "\n";
+				snippet += "\n   ";
 			}
 			return snippet;
 		}

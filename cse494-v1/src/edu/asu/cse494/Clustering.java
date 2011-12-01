@@ -10,15 +10,17 @@ import java.lang.*;
 import java.sql.Savepoint;
 import java.util.*;
 
+import javax.print.attribute.HashAttributeSet;
+
 import org.omg.CORBA.DoubleSeqHolder;
 
 
-public class Clustering 
+public class Clustering
 {
 	Hashtable<Integer, Hashtable<String, Double>> forwardIndex = new Hashtable<Integer, Hashtable<String,Double>>();
 	Hashtable<Integer, Double> rootSet = new Hashtable<Integer, Double>();
-	Hashtable<Integer, ArrayList<Integer>> cluster = new Hashtable<Integer, ArrayList<Integer>>();
-	Hashtable<Integer, ArrayList<Integer>> previousCluster = new Hashtable<Integer, ArrayList<Integer>>();
+	Hashtable<Integer, Hashtable<Integer, Double>> cluster = new Hashtable<Integer, Hashtable<Integer, Double>>();
+	Hashtable<Integer, Hashtable<Integer, Double>> previousCluster = new Hashtable<Integer, Hashtable<Integer, Double>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
 	int topKDocs = 50, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
@@ -108,16 +110,16 @@ public class Clustering
 			{
 				assignDocsToClusters();	
 				ArrayList<Integer> newSeeds = new ArrayList<Integer>();
-				System.out.println();
-				for(Map.Entry<Integer, ArrayList<Integer>> entry : cluster.entrySet())
+				//System.out.println();
+				for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
 				{
 					Hashtable<String, Double> centroid = getCentroid(entry.getValue());
-					System.out.println();
-					System.out.print(/*entry.getKey() + */"-> ");
-					for(int doc : entry.getValue())
+					/*System.out.println();
+					System.out.print(entry.getKey() + "-> ");
+					for(Map.Entry<Integer, Double> doc : entry.getValue().entrySet())
 					{
-						System.out.print(doc + ", ");
-					}
+						System.out.print(doc.getKey() + " " + doc.getValue() + ", ");
+					}*/
 					newSeeds.add(pseudoDoc);
 					forwardIndex.put(pseudoDoc++, centroid);
 				}
@@ -128,6 +130,15 @@ public class Clustering
 				previousCluster = deepCopy(cluster);
 				pickSeeds(newSeeds);
 			}
+			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
+			{
+				System.out.println();
+				System.out.print(entry.getKey() + "-> ");
+				for(Map.Entry<Integer, Double> doc : entry.getValue().entrySet())
+				{
+					System.out.print(doc.getKey() + /*" " + doc.getValue() + */", ");
+				}
+			}
 		}
 		catch(Exception ex)
 		{
@@ -135,19 +146,19 @@ public class Clustering
 		}
 	}
 	
-	private Hashtable<Integer, ArrayList<Integer>> deepCopy(Hashtable<Integer, ArrayList<Integer>> ht)
+	private Hashtable<Integer, Hashtable<Integer, Double>> deepCopy(Hashtable<Integer, Hashtable<Integer, Double>> ht)
 	{
-		Hashtable<Integer, ArrayList<Integer>> newHT = new Hashtable<Integer, ArrayList<Integer>>();
+		Hashtable<Integer, Hashtable<Integer, Double>> newHT = new Hashtable<Integer, Hashtable<Integer, Double>>();
 		try
 		{
-			for(Map.Entry<Integer, ArrayList<Integer>> entry : ht.entrySet())
+			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : ht.entrySet())
 			{
-				ArrayList<Integer> al = new ArrayList<Integer>();
-				for(int i : entry.getValue())
+				Hashtable<Integer, Double> innerMap = new Hashtable<Integer, Double>();
+				for(Map.Entry<Integer, Double> e : entry.getValue().entrySet())
 				{
-					al.add(i);
+					innerMap.put(e.getKey(), e.getValue());
 				}
-				newHT.put(entry.getKey(), al);
+				newHT.put(entry.getKey(), innerMap);
 			}
 		}
 		catch(Exception ex)
@@ -157,7 +168,7 @@ public class Clustering
 		return newHT;
 	}
 	
-	private boolean checkConvergence(Hashtable<Integer, ArrayList<Integer>> previous, Hashtable<Integer, ArrayList<Integer>> current)
+	private boolean checkConvergence(Hashtable<Integer, Hashtable<Integer, Double>> previous, Hashtable<Integer, Hashtable<Integer, Double>> current)
 	{
 		try
 		{
@@ -165,7 +176,7 @@ public class Clustering
 			{
 				return false;
 			}
-			for(Map.Entry<Integer, ArrayList<Integer>> entry : previous.entrySet())
+			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : previous.entrySet())
 			{
 				if(!current.containsValue(entry.getValue()))
 				{
@@ -187,7 +198,7 @@ public class Clustering
 			cluster.clear();
 			for(int seed : seeds)
 			{
-				cluster.put(seed, new ArrayList<Integer>());
+				cluster.put(seed, new Hashtable<Integer, Double>());
 			}
 		}
 		catch(Exception ex)
@@ -204,18 +215,13 @@ public class Clustering
 			cluster.clear();
 			for(Map.Entry<Integer, Double> entry : rootSet.entrySet())
 			{
-				cluster.put(entry.getKey(), new ArrayList<Integer>());
+				cluster.put(entry.getKey(), new Hashtable<Integer, Double>());
 				count++;
 				if(count >= clusterSize)
 				{
 					break;
 				}
 			}
-			/*cluster.put(2364, new ArrayList<Integer>());
-			cluster.put(2406, new ArrayList<Integer>());
-			cluster.put(2411, new ArrayList<Integer>());
-			cluster.put(1065, new ArrayList<Integer>());
-			cluster.put(2370, new ArrayList<Integer>());*/
 		}
 		catch(Exception ex)
 		{
@@ -233,7 +239,7 @@ public class Clustering
 			{
 				docWithMaxSim = -1;
 				maxSim = 0.0;
-				for(Map.Entry<Integer, ArrayList<Integer>> clusterEntry : cluster.entrySet())
+				for(Map.Entry<Integer, Hashtable<Integer, Double>> clusterEntry : cluster.entrySet())
 				{
 					double sim = documentDocumentSimilarity(rootSetEntry.getKey(), clusterEntry.getKey());
 					if(sim > maxSim)
@@ -242,8 +248,8 @@ public class Clustering
 						docWithMaxSim = clusterEntry.getKey();
 					}
 				}
-				ArrayList<Integer> docsInCluster = cluster.get(docWithMaxSim);
-				docsInCluster.add(rootSetEntry.getKey());
+				Hashtable<Integer, Double> docsInCluster = cluster.get(docWithMaxSim);
+				docsInCluster.put(rootSetEntry.getKey(), maxSim);
 				cluster.put(docWithMaxSim, docsInCluster);
 			}
 		}
@@ -293,15 +299,15 @@ public class Clustering
 		return sim;
 	}
 	
-	private Hashtable<String, Double> getCentroid(ArrayList<Integer> docs)
+	private Hashtable<String, Double> getCentroid(Hashtable<Integer, Double> docs)
 	{
 		Hashtable<String, Double> centroid = new Hashtable<String, Double>();
 		try
 		{
-			for(int doc : docs)
+			for(Map.Entry<Integer, Double> doc : docs.entrySet())
 			{
 				Hashtable<String, Double> termFreq = new Hashtable<String, Double>();
-				termFreq = forwardIndex.get(doc);
+				termFreq = forwardIndex.get(doc.getKey());
 				for(Map.Entry<String, Double> entry : termFreq.entrySet())
 				{
 					if(centroid.containsKey(entry.getKey()))

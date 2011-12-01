@@ -40,9 +40,12 @@ public class RelevanceFeedback
 	
 	private void startCalculation()
 	{
-		getRootSet();
-		separateDocs();
-		constructNewQuery();
+		while(true)
+		{
+			getRootSet();
+			separateDocs();
+			constructNewQuery();
+		}
 	}
 	
 	private void constructNewQuery()
@@ -155,8 +158,8 @@ public class RelevanceFeedback
 			ArrayList myArrayList = new ArrayList(docs.entrySet());
 			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
-			int numRelevantDocs = (int) Math.ceil(topKDocs / 2);
-			irrelevantDocs = forwardIndex;
+			int numRelevantDocs = (int) Math.ceil(topKDocs / 3);
+			//irrelevantDocs = forwardIndex;
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Double> entry = (Map.Entry<Integer, Double>)itr.next();
@@ -169,11 +172,12 @@ public class RelevanceFeedback
 				{
 					relevantDocs.put(entry.getKey(), termWeights);
 					numRelevantDocs--;
-					irrelevantDocs.remove(entry.getKey());
+					//irrelevantDocs.remove(entry.getKey());
 				}
 				else
 				{
-					break;
+					irrelevantDocs.put(entry.getKey(), termWeights);
+					//break;
 				}
 			}
 		}
@@ -282,7 +286,7 @@ public class RelevanceFeedback
 			fr.close();
 			long end = System.currentTimeMillis();
 			//System.out.println("loading forward index took " + (end - start) + " ms");
-			System.out.println("top k/2 (k=10 in his case) docs would be automatically considered relevant, rest of the corpus is irrelevant");
+			System.out.println("top k/3 (k=10 in his case) docs would be automatically considered relevant, rest of the docs are irrelevant");
 		}
 		catch(Exception ex)
 		{

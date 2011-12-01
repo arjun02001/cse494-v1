@@ -52,6 +52,7 @@ public class RelevanceFeedback
 	{
 		try
 		{
+			long start = System.currentTimeMillis();
 			Hashtable<String, Double> newQuery = new Hashtable<String, Double>();
 			Hashtable<String, Double> relevantCentroid = getCentroid(relevantDocs, beta);
 			Hashtable<String, Double> irrelevantCentroid = getCentroid(irrelevantDocs, gamma);
@@ -90,14 +91,17 @@ public class RelevanceFeedback
 					newQuery.put(entry.getKey(), entry.getValue());
 				}
 			}
+			long end = System.currentTimeMillis();
+			System.out.println("constructing new query took " + (end - start) + "ms");
 			
 			IndexReader reader = IndexReader.open("result3index");
+			System.out.println();
 			System.out.println("new query generated using rocchio feedback");
 			System.out.println("recomputing similarity with the new query. may take 20-30 sec");
-			long start = System.currentTimeMillis();
+			start = System.currentTimeMillis();
 			Hashtable<Integer, Double> similarity = sim.computeSimilarity(newQuery);
-			long end = System.currentTimeMillis();
-			//System.out.println("recomputing similarity took " + (end - start) + "ms");
+			end = System.currentTimeMillis();
+			System.out.println("recomputing similarity took " + (end - start) + "ms");
 			System.out.println();
 			Hashtable<Integer, Double> docs = sim.getTopKResults(similarity, topKDocs);
 			ArrayList myArrayList=new ArrayList(docs.entrySet());
@@ -155,6 +159,7 @@ public class RelevanceFeedback
 	{
 		try
 		{
+			long start = System.currentTimeMillis();
 			ArrayList myArrayList = new ArrayList(docs.entrySet());
 			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
@@ -180,6 +185,8 @@ public class RelevanceFeedback
 					//break;
 				}
 			}
+			long end = System.currentTimeMillis();
+			System.out.println("separating docs took " + (end - start) + "ms");
 		}
 		catch (Exception e) 
 		{
@@ -193,6 +200,19 @@ public class RelevanceFeedback
 		{
 			Hashtable<Integer, Double> similarity = sim.computeSimilarity();
 			docs = sim.getTopKResults(similarity, topKDocs);
+			ArrayList myArrayList=new ArrayList(docs.entrySet());
+			Collections.sort(myArrayList, new MyComparator1());
+			Iterator itr=myArrayList.iterator();
+			int count = 0;
+			IndexReader reader = IndexReader.open("result3index");
+			while(itr.hasNext())
+			{
+				Map.Entry<Integer, Double> entry = (Map.Entry<Integer, Double>)itr.next();
+				System.out.println((count + 1) + ". docid = " + entry.getKey() + "  title = " + reader.document(entry.getKey()).get("title"));
+				System.out.println("   url = " + reader.document(entry.getKey()).get("url"));
+				count++;
+			}
+			reader.close();
 		}
 		catch (Exception e) 
 		{

@@ -24,9 +24,9 @@ public class Snippet
 	public static void main(String[] args) 
 	{
 		Snippet snippet = new Snippet();
-		//snippet.createPositionInfo();
-		//snippet.savePositionInfo();
-		snippet.loadPositionInfo();
+		//snippet.createPositionInfo(); //uncomment this to create position info
+		//snippet.savePositionInfo(); //save position info to file
+		snippet.loadPositionInfo(); //load position info from file
 		snippet.startCalculation();
 	}
 	
@@ -62,6 +62,7 @@ public class Snippet
 			Collections.sort(myArrayList, new MyComparator1());
 			Iterator itr=myArrayList.iterator();
 			System.out.println();
+			long start = System.currentTimeMillis();
 			while(itr.hasNext())
 			{
 				Map.Entry<Integer, Double> entry = (Map.Entry<Integer, Double>)itr.next();
@@ -70,6 +71,8 @@ public class Snippet
 				System.out.println("   " + getSnippet(entry.getKey()));
 				count++;
 			}
+			long end = System.currentTimeMillis();
+			System.out.println("snippet generation took " + (end - start) + "ms");
 			reader.close();
 		}
 		catch (Exception e) 

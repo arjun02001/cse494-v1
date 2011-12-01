@@ -130,13 +130,49 @@ public class Clustering
 				previousCluster = deepCopy(cluster);
 				pickSeeds(newSeeds);
 			}
+			showResults();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	private void showResults()
+	{
+		try
+		{
+			int count = 0;
+			IndexReader reader = IndexReader.open("result3index");
 			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
 			{
 				System.out.println();
-				System.out.print(entry.getKey() + "-> ");
+				System.out.print(/*entry.getKey() + */"cluster " + ++count + "-> ");
 				for(Map.Entry<Integer, Double> doc : entry.getValue().entrySet())
 				{
 					System.out.print(doc.getKey() + /*" " + doc.getValue() + */", ");
+				}
+			}
+			System.out.println();
+			int count2 = 0;
+			for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
+			{
+				ArrayList myArrayList = new ArrayList(entry.getValue().entrySet());
+				Collections.sort(myArrayList, new MyComparator1());
+				Iterator itr = myArrayList.iterator();
+				count = 0;
+				System.out.println();
+				System.out.println(/*entry.getKey() + */"cluster " + ++count2 + "-> ");
+				while(itr.hasNext())
+				{
+					if(count > 2)
+					{
+						break;
+					}
+					Map.Entry<Integer, Double> e = (Map.Entry<Integer, Double>)itr.next();
+					System.out.println((count + 1) + ". docid = " + e.getKey() + "  title = " + reader.document(e.getKey()).get("title"));
+					System.out.println("   url = " + reader.document(e.getKey()).get("url"));
+					count++;
 				}
 			}
 		}

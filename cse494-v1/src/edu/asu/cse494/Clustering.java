@@ -23,13 +23,13 @@ public class Clustering
 	Hashtable<Integer, Hashtable<Integer, Double>> previousCluster = new Hashtable<Integer, Hashtable<Integer, Double>>();
 	TFIDFSimilarity sim = null;
 	double[] norm;
-	int topKDocs = 50, clusterSize = 3, pseudoDoc = 25053, corpusCount = 25053;
+	int topKDocs = 50, clusterSize = 10, pseudoDoc = 25053, corpusCount = 25053;
 	
 	public static void main(String[] args) 
 	{
 		Clustering clustering = new Clustering();
-		//clustering.saveForwardIndex();
-		clustering.loadForwardIndex();
+		//clustering.saveForwardIndex(); //uncomment this to save the forward index to a file
+		clustering.loadForwardIndex(); // reads the forward index from a file
 		clustering.startCalculation();
 	}
 	
@@ -39,6 +39,7 @@ public class Clustering
 		norm = getNorm();
 	}
 	
+	//reads norm from a file
 	private double[] getNorm()
 	{
 		norm = new double[25053];
@@ -62,6 +63,7 @@ public class Clustering
 		return norm;
 	}
 	
+	//computes norm of a doc
 	private double getNorm(Hashtable<String, Double> doc)
 	{
 		double norm = 0.0;
@@ -85,7 +87,10 @@ public class Clustering
 		{
 			getRootSet();
 			pseudoDoc = corpusCount;
+			long start = System.currentTimeMillis();
 			formClusters();
+			long end = System.currentTimeMillis();
+			System.out.println("total time = " + (end - start) + "ms");
 		}
 	}
 	
@@ -110,16 +115,9 @@ public class Clustering
 			{
 				assignDocsToClusters();	
 				ArrayList<Integer> newSeeds = new ArrayList<Integer>();
-				//System.out.println();
 				for(Map.Entry<Integer, Hashtable<Integer, Double>> entry : cluster.entrySet())
 				{
 					Hashtable<String, Double> centroid = getCentroid(entry.getValue());
-					/*System.out.println();
-					System.out.print(entry.getKey() + "-> ");
-					for(Map.Entry<Integer, Double> doc : entry.getValue().entrySet())
-					{
-						System.out.print(doc.getKey() + " " + doc.getValue() + ", ");
-					}*/
 					newSeeds.add(pseudoDoc);
 					forwardIndex.put(pseudoDoc++, centroid);
 				}
@@ -171,15 +169,6 @@ public class Clustering
 					}
 				}
 			}
-			/*for(Map.Entry<String, ArrayList<Integer>> entry : termCentroid.entrySet())
-			{
-				System.out.println();
-				System.out.print(entry.getKey() + "-> ");
-				for(int i : entry.getValue())
-				{
-					System.out.print(i + ", ");
-				}
-			}*/
 			Hashtable<Integer, String> summary = new Hashtable<Integer, String>();
 			for(Map.Entry<String, ArrayList<Integer>> entry : termCentroid.entrySet())
 			{

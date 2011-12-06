@@ -25,7 +25,7 @@ public class Clustering
 	double[] norm;
 	int topKDocs = 50, clusterSize = 10, pseudoDoc = 25053, corpusCount = 25053;
 	
-	public static void main(String[] args) 
+	public static void main(String[] args) throws NumberFormatException, IOException 
 	{
 		Clustering clustering = new Clustering();
 		//clustering.saveForwardIndex(); //uncomment this to save the forward index to a file
@@ -33,7 +33,7 @@ public class Clustering
 		clustering.startCalculation();
 	}
 	
-	public Clustering()
+	public Clustering() throws NumberFormatException, IOException
 	{
 		sim = new TFIDFSimilarity();
 		norm = getNorm();
@@ -110,6 +110,9 @@ public class Clustering
 	{
 		try
 		{
+			System.out.println("how many clusters do you want");
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			clusterSize = Integer.parseInt(in.readLine());
 			pickSeeds();
 			while(true)
 			{

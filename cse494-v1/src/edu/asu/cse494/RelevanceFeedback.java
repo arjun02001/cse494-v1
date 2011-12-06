@@ -97,7 +97,7 @@ public class RelevanceFeedback
 			IndexReader reader = IndexReader.open("result3index");
 			System.out.println();
 			System.out.println("new query generated using rocchio feedback");
-			System.out.println("recomputing similarity with the new query. may take 20-30 sec");
+			System.out.println("recomputing similarity with the new query. may take 2-3 sec");
 			start = System.currentTimeMillis();
 			Hashtable<Integer, Double> similarity = sim.computeSimilarity(newQuery);
 			end = System.currentTimeMillis();
